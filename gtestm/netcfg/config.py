@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-
 import getpass
 
 
 # ask if not present
 def ainp(store, key, out, secure=False):
+    """Ask for some data if it is not present"""
     if key not in store:
         if secure:
             store[key] = getpass.getpass("Enter" + out + ":\n")
@@ -17,7 +17,7 @@ def ainp(store, key, out, secure=False):
 class Config:
     """Manages the data needed for accessing remote tests and other configuration data."""
     # Where everything IS
-    CONFIG_FILE_DIR = "../config"
+    CONFIG_FILE_DIR = "../../config"
     # Constant information
     CURR_TEST_HOME = "~gheith/public/"
 
@@ -122,7 +122,7 @@ class Config:
                 )
             )
         )
-        print(setting_data)
+
         for cat, val in setting_data:
             cfg_dict[cat] = val
 
