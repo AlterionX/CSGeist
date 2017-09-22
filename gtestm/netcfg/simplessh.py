@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import paramiko
-import gtestm_netcfg.config as config
+
+import gtestm.netcfg.config as config
 
 
 def run(cmd: str, cfg: config.Config):

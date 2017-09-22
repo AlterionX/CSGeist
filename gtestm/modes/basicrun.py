@@ -2,8 +2,9 @@
 
 import stat
 
-import gtestm_netcfg.config as config
 import gtestm_netcfg.simplessh as genssh
+
+import gtestm.netcfg.config as config
 
 
 def paaf(f):
