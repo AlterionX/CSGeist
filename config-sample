@@ -1,0 +1,32 @@
+//The CS account -- leaving this blank will cause a popup asking for the info
+remote_user:cl
+remote_pass:i<3turing
+remote_host:linux.cs.utexas.edu
+//The account on the computer you are running -- leaving this blank will cause a popup asking for the info, but it's not implemented yet
+local_user:clstu
+local_pass:ih8honors
+local_host:corona-borealis.cs.utexas.edu
+//Where your project files are
+proj_loc:remote
+proj_dir:~/WhatAreYouDoing/clstu_csXXXh_sXX_pX
+//Where the program will use for scratch work
+outp_loc:remote
+outp_dir:~/WhatAreYouDoing/gtestm_clstu_csXXXh_sXX_pX
+//Info on the current project
+curr_proj_sem:sXX
+curr_proj_cls:csXXXh
+curr_proj_num:pX
+//All files after a certain time, not implemented yet
+yr:NotDoneYet
+mn:NotDoneYet
+dy:NotDoneYet
+hr:NotDoneYet
+mi:NotDoneYet
+sc:NotDoneYet
+
+//Just listing all the possibilities
+//pull_types:latest,broken,notbroken,all,brokenchildren
+
+//Dunno whose email this is, but something's wrong with him.
+//email:./email.txt
+
