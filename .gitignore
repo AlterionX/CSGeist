@@ -1,3 +1,5 @@
 .idea/
 val/
 src/__pycache__/
+
+config
