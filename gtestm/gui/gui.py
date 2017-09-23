@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+import time
+import threading
 
 def set_profile(id, psd):
     print ("ID: " + id + "   " + "PSD: " + psd)
@@ -9,6 +11,9 @@ def is_logged_in():
 
 def do_full_refresh():
     print ("Full Refresh Requested")
+
+def is_refreshing_complete():
+    return False
 
 def get_tests():
     hash_ = {}
@@ -25,10 +30,20 @@ def get_tests():
         hash_["test_Test_test" + str(element)] = status
     return hash_
 
+def get_status():
+    return 100
+
+count = 0
+def mouse_wheel(event):
+    global count
+    # respond to Linux or Windows wheel event
+    if event.num == 5 or event.delta == -120:
+        count -= 1
+    if event.num == 4 or event.delta == 120:
+        count += 1
 
 class Overview(tk.Frame):
     def __init__(self, root):
-
         tk.Frame.__init__(self, root)
         self.canvas = tk.Canvas(root, borderwidth=0, background="#ffffff")
         self.frame = tk.Frame(self.canvas, background="#ffffff")
@@ -42,6 +57,10 @@ class Overview(tk.Frame):
 
         self.frame.bind("<Configure>", self.onFrameConfigure)
 
+        # self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+        self.canvas.bind_all("<Button-4><Button-5>", self._on_mousewheel)
+        # self.canvas.bind_all("<Button-5>", self._on_mousewheel)
+
         self.master = self.frame
 
         self.tests_widgets = []
@@ -51,18 +70,38 @@ class Overview(tk.Frame):
             log_in.mainloop()
             log_in.master.withdraw()
 
-        self.refresh = ttk.Button(self.master, text="Refresh", command=lambda: self.update("refresh"))
+        self.event_queue = []
+        self.event_queue.append("render_layout")
+        self.event_queue_handler()
 
-        self.render_layout()
+    def _on_mousewheel(self, event):
+        self.vsb.yview("scroll",event.delta,"units")
+        self.canvas.yview_scroll(-1 * event.delta // 120, "units")
+        return "break"
+
+    def event_queue_handler(self):
+        while self.event_queue:
+            if self.event_queue[0] == "render_layout":
+                self.render_layout()
+                self.event_queue.pop(0)
+            elif self.event_queue[0] == "refresh":
+                do_full_refresh()
+                prog_thread = ProgThread()
+                prog_thread.start()
+                prog_thread.progress_bar.mainloop()
+                self.render_layout()
+                self.event_queue.pop(0)
+
+    def full_refresh(self):
+        while not is_refreshing_complete():
+            print("refreshing")
 
     def render_layout(self):
-
+        self.refresh = ttk.Button(self.master, text="Refresh", command=lambda: self.update("refresh"))        
         self.refresh.grid(row=0, column=2, sticky=tk.W)
-
         self.render_tests()
 
     def render_tests(self):
-
         self.foreground = {"PASS" : "white", "FAIL" : "white", "INVALID" : "white", "COMPILE ERR" : "white"}
         self.background = {"PASS" : "green", "FAIL" : "red", "INVALID" : "blue", "COMPILE ERR" : "blue"}
 
@@ -92,7 +131,6 @@ class Overview(tk.Frame):
             self.render_test(test_hash, tests_[test_hash])
 
     def render_test(self, test_hash, test_status):
-        print ("called")
         self.render_test_index += 1
 
         test_hash_label = ttk.Label(self.master, text=test_hash)
@@ -109,13 +147,46 @@ class Overview(tk.Frame):
         return 0
 
     def update(self, method):
-
         if method == "refresh":
-            do_full_refresh()
+            self.event_queue.append("refresh")
+            self.event_queue_handler()
 
     def onFrameConfigure(self, event):
         '''Reset the scroll region to encompass the inner frame'''
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+class ProgThread(threading.Thread):
+    def __init__(self):
+        super().__init__()
+        self.progress_bar = LoadFrame(tk.Toplevel())
+        
+    def run(self):
+        self.progress_bar.loop_function()
+        self.progress_bar.master.withdraw()
+
+class LoadFrame(tk.Frame):
+
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+
+        self.MAX = 100
+        self.master = master
+
+        self.master.geometry('{}x{}'.format(400, 100))
+        self.progress_var = tk.DoubleVar() #here you have ints but when calc. %'s usually floats
+        theLabel = ttk.Label(self.master, text="Fetching and running tests")
+        theLabel.pack()
+        progressbar = ttk.Progressbar(self.master, variable=self.progress_var, maximum=self.MAX)
+        progressbar.pack(fill=tk.X, expand=1)
+
+    def loop_function(self):
+        k = 0
+        while k < self.MAX:
+            k = get_status()
+            self.progress_var.set(k)
+            time.sleep(0.3)
+            self.master.update_idletasks()
+        self.master.quit()
 
 class LoginFrame(tk.Frame):
 
@@ -124,7 +195,7 @@ class LoginFrame(tk.Frame):
 
         self.master = master
 
-        aster.title("G Test Manager")
+        self.master.title("G Test Manager")
 
         self.ut_id = ttk.Label(master, text="CS ID:")
         self.password = ttk.Label(master, text="Password:")
@@ -140,7 +211,6 @@ class LoginFrame(tk.Frame):
         self.render_layout()
 
     def render_layout(self):
-
         self.ut_id.grid(row=0, column=0, sticky=tk.W)
         self.ut_id_.grid(row=0, column=1, columnspan=2, sticky=tk.E)
 
@@ -174,3 +244,9 @@ if __name__ == "__main__":
     root = tk.Tk()
     Overview(root)
     root.mainloop()
+
+    # with Windows OS
+    root.bind("<MouseWheel>", mouse_wheel)
+    # with Linux OS
+    root.bind("<Button-4>", mouse_wheel)
+    root.bind("<Button-5>", mouse_wheel)
