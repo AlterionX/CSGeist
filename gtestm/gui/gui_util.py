@@ -9,11 +9,12 @@ import gtestm.modes.request as req
 OS = platform.system()
 
 
-class LoginFrame(tk.Frame):
-    def __init__(self, master):
+class LoginFrame(ttk.Frame):
+    def __init__(self, master, service):
         super().__init__(master)
 
         self.master = master
+        self.service = service
 
         self.master.title("G Test Manager")
 
@@ -25,8 +26,10 @@ class LoginFrame(tk.Frame):
         vcmd_2 = master.register(self.validate_password)  # we have to wrap the command
         self.password_ = ttk.Entry(master, show="*", validate="key", validatecommand=(vcmd_2, '%P'))
 
-        self.sign_in = ttk.Button(master, text="Sign In", command=lambda: self.update("sign_in"))
-        self.quit = ttk.Button(master, text="Quit", command=lambda: self.update("quit"))
+        self.sign_in = ttk.Button(master, text="Sign In", command=self.update)
+
+        self.UTID = ""
+        self.PSSWD = ""
 
         self.render_layout()
 
@@ -38,7 +41,6 @@ class LoginFrame(tk.Frame):
         self.password_.grid(row=1, column=1, columnspan=2, sticky=tk.E)
 
         self.sign_in.grid(row=2, column=0)
-        self.quit.grid(row=2, column=1)
 
     def validate_ut_id(self, new_text):
         if not len(new_text.strip()):
@@ -52,13 +54,13 @@ class LoginFrame(tk.Frame):
         self.PSSWD = new_text
         return True
 
-    def update(self, method):
-        if method == "sign_in":
-            if len(self.UTID) > 0 and len(self.PSSWD) > 0:
-                set_profile(self.UTID, self.PSSWD)
-                self.master.quit()
-        elif method == "quit":
-            self.master.master.destroy()
+    def update(self):
+        print("Hello,", self.UTID);
+        if len(self.UTID) > 0 and len(self.PSSWD) > 0:
+            print("You have entered your login information");
+            self.service.set_profile(self.UTID, self.PSSWD)
+            self.master.master.event_generate("<<Refresh>>")
+            self.master.destroy()
 
 
 
@@ -277,6 +279,8 @@ class CoreFrame(ttk.Frame):
         # Layout the widgets
         self._layout_widgets()
 
+        self.bind("<<ReqData>>", self.launch_dialog)
+        self.bind("<<Refresh>>", self.refresh)
         self.bind("<<Updated>>", self.fetch_new)
         self.bind("<<EndUpdate>>", self.restore_completion)
 
@@ -300,6 +304,11 @@ class CoreFrame(ttk.Frame):
         print("configure")
         self.test_display.update()
         self.test_display.event_generate("<<Configure>>")
+
+    def launch_dialog(self, event):
+        another = tk.Toplevel(master=self, bg='#ffffff',bd=0,height=50,width=600,highlightthickness=0,takefocus=True)
+        LoginFrame(another, self.service)
+        another.mainloop()
 
     def restore_completion(self, event=None):
         self.refresh_button.grid(row=1, column=0, sticky=tk.E + tk.W)

@@ -18,9 +18,9 @@ Complete:
 - Display test data
 - GUI interface for test running
 - CLI script for test running
+- GUI/CLI dynamic login info request
 
 In progress:
-- Optional password +user entry for GUI (CLI already has the capability)
 - Parallellized testing
 - Sorting test cases by name and pass/fail state
 - Selective testing & test data replacement

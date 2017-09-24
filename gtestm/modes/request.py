@@ -64,7 +64,7 @@ class TestSingleRunner(TestAllRunner):
 
 class Backend:
     def __init__(self):
-        self.cfg = config.Config()
+        self.cfg = config.Config(delay_login=True)
         self.testdata = testdata.TestData()
         self.run_thread = th.Thread()
         self.localstore = th.local
@@ -74,6 +74,9 @@ class Backend:
         """do_full_refresh() -> None
         no return type, triggers backend to ssh and stuff
         :param self1: """
+        if self.cfg.check_req():
+            trigger.event_generate("<<ReqData>>")
+            return False
         if self.run_lock.acquire(blocking=False):
             self.testdata = testdata.TestData()
             self.run_thread = TestAllRunner(self.cfg, self.testdata, trigger)
@@ -117,6 +120,8 @@ class Backend:
         set_profile(username: str, password: str) -> None"""
         self.cfg.remote_user = usern
         self.cfg.remote_pass = passw
+        self.cfg.store[config.Config.GDC_USER_KEY] = self.cfg.remote_user
+        self.cfg.store[config.Config.GDC_PASS_KEY] = self.cfg.remote_pass
 
     def run_test(self, hashstr):
         """run_test(hash: str) -> None"""

@@ -104,8 +104,16 @@ class Config:
 
     # endregion
 
-    def __init__(self, cfg_file=CONFIG_FILE_DIR):
-        self._init(**self._pull(cfg_file))
+    def __init__(self, cfg_file=CONFIG_FILE_DIR, delay_login=False):
+        self.delay_login = delay_login
+        self.store = self._pull(cfg_file)
+        self._init(**self.store)
+
+    def check_req(self):
+        for key, prompt in Config.REQ_ELEM:
+            if key not in self.store or self.store[key] == None or not self.store[key]:
+                return True
+        return False
 
     def _pull(self, cfg_file):
         cfg_dict = {}
@@ -125,6 +133,9 @@ class Config:
 
         for cat, val in setting_data:
             cfg_dict[cat.strip()] = val.strip()
+
+        if self.delay_login:
+            return cfg_dict
 
         for req_key, prompt in Config.REQ_ELEM:
             ainp(cfg_dict, req_key, prompt)
