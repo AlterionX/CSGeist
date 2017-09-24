@@ -6,6 +6,10 @@ import gtestm.utils.testdata as testdata
 import gtestm.modes.run as run
 
 
+proglock = th.Lock()
+progress = None
+
+
 class TestAllRunner:
     def __init__(self, cfg: config.Config, hashlist: list):
         """
@@ -18,8 +22,16 @@ class TestAllRunner:
         self.td = testdata.TestData()
 
     def run(self):
+        proglock.acquire()
+        progress = 0
+        proglock.release()
+        quant = len(self.hashlist)
         for direc in self.hashlist:
+            proglock.acquire()
+            progress = self.td.total / quant
+            proglock.release()
             run.run_test_single(direc, self.cfg, self.td)
+        proglock.release()
 
 
 class TestSingleRunner(TestAllRunner):
@@ -36,7 +48,8 @@ class Backend:
     def __init__(self):
         self.cfg = config.Config()
         self.testdata = testdata.TestData()
-        self.run_thread = None
+        self.run_thread = th.Thread()
+        self.localstore = th.local
         self.run_lock = th.Lock()
 
     def do_full_refresh(self):
@@ -45,6 +58,7 @@ class Backend:
         if self.run_lock.acquire(blocking=False):
             self.run_thread = th.Thread(target=TestAllRunner())
             self.run_thread.start()
+            self.run_lock.release()
             return True
         else:
             return False
@@ -60,9 +74,12 @@ class Backend:
         returns a status during the refresh (progress bar %), None if not refreshing
         """
         if not self.run_thread.is_alive():
-            return 0
-
-        # If it is running, get the number of completed tests
+            return None
+        else:
+            progrep = 0
+            with proglock:
+                progrep = progress
+            return progrep
 
     def get_tests(self):
         """get_tests() -> {str : Status}
@@ -92,7 +109,7 @@ class Backend:
 
     def get_test_status(self, hashstr):
         """
-        get_test_status(hash: str) -> (Status, Flags)
+        get_test_status(hash: str) -> (Status, Flags, ...)
             Status is an enum
                 PASS
                 FAIL
@@ -100,6 +117,7 @@ class Backend:
                 COMPILER ERROR
             Flags is a class
                 invalid: bool"""
+        return self.testdata.tests[hashstr][0], testdata.fetch_flags(hashstr)
 
     def get_test_data(self, hashstr):
         """
@@ -107,3 +125,4 @@ class Backend:
         First: Test Code
         Second: Expected Output
         Third: Actual Output"""
+        data = [x for x in self.testdata.tests[hashstr][3]]

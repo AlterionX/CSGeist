@@ -5,6 +5,10 @@ class TestData:
     """
     A class for storing and updating the testing data
     """
+    STATUS_KEY = "status"
+    DATA_KEY = "data"
+    FLAG_KEY = "flag"
+
     def __init__(self):
         self.tests = {}
         self.passed = 0
@@ -22,17 +26,33 @@ class TestData:
         """
         self.total += 1
         if "... pass ---" == data[0][-len("... pass ---"):len(data[0])]:
-            self.tests[file_hash] = Status.PASS, data, fetch_flags(file_hash)
+            self.tests[file_hash] = {
+                TestData.STATUS_KEY: Status.PASS,
+                TestData.DATA_KEY: data,
+                TestData.FLAG_KEY: fetch_flags(file_hash)
+            }
             self.passed += 1
         elif "----> timeout <----" == data[-1][-len("----> timeout <----"):len(data[-1])]:
-            self.tests[file_hash] = Status.TOUT, data, fetch_flags(file_hash)
+            self.tests[file_hash] = {
+                TestData.STATUS_KEY: Status.TOUT,
+                TestData.DATA_KEY: data,
+                TestData.FLAG_KEY: fetch_flags(file_hash)
+            }
             self.timed_out += 1
         elif "... fail ---" == data[0][-len("... pass ---"):len(data[0])]:
-            self.tests[file_hash] = Status.FAIL, data, fetch_flags(file_hash)
+            self.tests[file_hash] = {
+                TestData.STATUS_KEY: Status.FAIL,
+                TestData.DATA_KEY: data,
+                TestData.FLAG_KEY: fetch_flags(file_hash)
+            }
             self.failed += 1
         elif "failed" == data[-1][-len("failed"):len(data[-1])] and "Makefile:32: recipe for target " == data[-1][:len(
                 "Makefile:32: recipe for target ")]:
-            self.tests[file_hash] = Status.CERR, data, fetch_flags(file_hash)
+            self.tests[file_hash] = {
+                TestData.STATUS_KEY: Status.CERR,
+                TestData.DATA_KEY: data,
+                TestData.FLAG_KEY: fetch_flags(file_hash)
+            }
             self.comp_failed += 1
 
     def __str__(self):

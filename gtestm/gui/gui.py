@@ -3,17 +3,22 @@ from tkinter import ttk
 import time
 import threading
 
+
 def set_profile(id, psd):
-    print ("ID: " + id + "   " + "PSD: " + psd)
+    print("ID: " + id + "   " + "PSD: " + psd)
+
 
 def is_logged_in():
     return True
 
+
 def do_full_refresh():
-    print ("Full Refresh Requested")
+    print("Full Refresh Requested")
+
 
 def is_refreshing_complete():
     return False
+
 
 def get_tests():
     hash_ = {}
@@ -30,10 +35,14 @@ def get_tests():
         hash_["test_Test_test" + str(element)] = status
     return hash_
 
+
 def get_status():
     return 100
 
+
 count = 0
+
+
 def mouse_wheel(event):
     global count
     # respond to Linux or Windows wheel event
@@ -42,20 +51,22 @@ def mouse_wheel(event):
     if event.num == 4 or event.delta == 120:
         count += 1
 
+
 class Overview(tk.Frame):
-    def __init__(self, root):
-        tk.Frame.__init__(self, root)
-        self.canvas = tk.Canvas(root, borderwidth=0, background="#ffffff")
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+
+        self.canvas = tk.Canvas(master, borderwidth=0, background="#ffffff")
         self.frame = tk.Frame(self.canvas, background="#ffffff")
-        self.vsb = tk.Scrollbar(root, orient="vertical", command=self.canvas.yview)
+        self.vsb = tk.Scrollbar(master, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.vsb.set)
 
         self.vsb.pack(side="right", fill="y")
         self.canvas.pack(side="left", fill="both", expand=True)
-        self.canvas.create_window((4,4), window=self.frame, anchor="nw", 
+        self.canvas.create_window((4, 4), window=self.frame, anchor="nw",
                                   tags="self.frame")
 
-        self.frame.bind("<Configure>", self.onFrameConfigure)
+        self.frame.bind("<Configure>", self.configure_frame)
 
         # self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
         self.canvas.bind_all("<Button-4><Button-5>", self._on_mousewheel)
@@ -75,7 +86,7 @@ class Overview(tk.Frame):
         self.event_queue_handler()
 
     def _on_mousewheel(self, event):
-        self.vsb.yview("scroll",event.delta,"units")
+        self.vsb.yview("scroll", event.delta, "units")
         self.canvas.yview_scroll(-1 * event.delta // 120, "units")
         return "break"
 
@@ -97,13 +108,13 @@ class Overview(tk.Frame):
             print("refreshing")
 
     def render_layout(self):
-        self.refresh = ttk.Button(self.master, text="Refresh", command=lambda: self.update("refresh"))        
+        self.refresh = ttk.Button(self.master, text="Refresh", command=lambda: self.update("refresh"))
         self.refresh.grid(row=0, column=2, sticky=tk.W)
         self.render_tests()
 
     def render_tests(self):
-        self.foreground = {"PASS" : "white", "FAIL" : "white", "INVALID" : "white", "COMPILE ERR" : "white"}
-        self.background = {"PASS" : "green", "FAIL" : "red", "INVALID" : "blue", "COMPILE ERR" : "blue"}
+        self.foreground = {"PASS": "white", "FAIL": "white", "INVALID": "white", "COMPILE ERR": "white"}
+        self.background = {"PASS": "green", "FAIL": "red", "INVALID": "blue", "COMPILE ERR": "blue"}
 
         # get rid of all the current tests
         for test in self.tests_widgets:
@@ -151,21 +162,22 @@ class Overview(tk.Frame):
             self.event_queue.append("refresh")
             self.event_queue_handler()
 
-    def onFrameConfigure(self, event):
-        '''Reset the scroll region to encompass the inner frame'''
+    def configure_frame(self, event):
+        """Reset the scroll region to encompass the inner frame"""
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
 
 class ProgThread(threading.Thread):
     def __init__(self):
         super().__init__()
         self.progress_bar = LoadFrame(tk.Toplevel())
-        
+
     def run(self):
         self.progress_bar.loop_function()
         self.progress_bar.master.withdraw()
 
-class LoadFrame(tk.Frame):
 
+class LoadFrame(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
 
@@ -173,7 +185,7 @@ class LoadFrame(tk.Frame):
         self.master = master
 
         self.master.geometry('{}x{}'.format(400, 100))
-        self.progress_var = tk.DoubleVar() #here you have ints but when calc. %'s usually floats
+        self.progress_var = tk.DoubleVar()  # here you have ints but when calc. %'s usually floats
         theLabel = ttk.Label(self.master, text="Fetching and running tests")
         theLabel.pack()
         progressbar = ttk.Progressbar(self.master, variable=self.progress_var, maximum=self.MAX)
@@ -188,8 +200,8 @@ class LoadFrame(tk.Frame):
             self.master.update_idletasks()
         self.master.quit()
 
-class LoginFrame(tk.Frame):
 
+class LoginFrame(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
 
@@ -200,9 +212,9 @@ class LoginFrame(tk.Frame):
         self.ut_id = ttk.Label(master, text="CS ID:")
         self.password = ttk.Label(master, text="Password:")
 
-        vcmd_1 = master.register(self.validate_ut_id) # we have to wrap the command
+        vcmd_1 = master.register(self.validate_ut_id)  # we have to wrap the command
         self.ut_id_ = ttk.Entry(master, validate="key", validatecommand=(vcmd_1, '%P'))
-        vcmd_2 = master.register(self.validate_password) # we have to wrap the command
+        vcmd_2 = master.register(self.validate_password)  # we have to wrap the command
         self.password_ = ttk.Entry(master, show="*", validate="key", validatecommand=(vcmd_2, '%P'))
 
         self.sign_in = ttk.Button(master, text="Sign In", command=lambda: self.update("sign_in"))
@@ -240,11 +252,12 @@ class LoginFrame(tk.Frame):
         elif method == "quit":
             self.master.master.destroy()
 
+
 if __name__ == "__main__":
     root = tk.Tk()
     Overview(root)
-    root.mainloop()
 
+    root.mainloop()
     # with Windows OS
     root.bind("<MouseWheel>", mouse_wheel)
     # with Linux OS
