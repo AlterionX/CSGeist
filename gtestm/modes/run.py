@@ -32,6 +32,7 @@ def run_test_single(filename: str, cfg: config.Config, td: testdata.TestData):
     :return: None
     """
     name = filename if '.' not in filename else filename[:filename.index('.')]
+    print("Running test", name)
     indata, outdata, errdata, ssh = genssh.run(
         "cd {};make -s {}.result".format(
             cfg.outp_dir,
