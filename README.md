@@ -1,10 +1,22 @@
-Goal: create a simple to use interface for running tests on the lab machines in conjunction with Gheith's testing system
+A simple to use interface for running tests on the lab machines in conjunction with Gheith's testing system.
 
-pick to either use files in local or in remote
+See config file for details about how to change the configuration information.
 
-Local machine + files
-Remote machine + personal files + gheith's files
+Complete:
+- Run all test cases
+- Display test data
+- GUI interface for test running
+- CLI script for test running
 
-scp:
-local account
-local name
+In progress:
+- Optional password +user entry for GUI (CLI already has the capability)
+- Parallellized testing
+- Sorting test cases by name and pass/fail state
+- Selective testing & test data replacement
+- Flagging tests (invalid)
+- Batch running selected tests
+- Better GUI
+- Test result caching
+- Duplicate test detection
+- Possible related test detection
+- ... and more

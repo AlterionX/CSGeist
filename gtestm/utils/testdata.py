@@ -78,6 +78,18 @@ class Status(enum.Enum):
     CERR = 3
     """The test has failed to compile with your implementation"""
 
+    def __bool__(self):
+        return self.value == Status.PASS.value
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __lt__(self, other):
+        return self.value < other.value
+
+    def __gt__(self, other):
+        return self.value > other.value
+
 
 class Flags:
     """Flags set by users: potentially have networking here"""

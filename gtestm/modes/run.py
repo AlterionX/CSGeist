@@ -31,15 +31,16 @@ def run_test_single(filename: str, cfg: config.Config, td: testdata.TestData):
     :param td: The TestData object used to hold that tested data
     :return: None
     """
+    name = filename if '.' not in filename else filename[:filename.index('.')]
     indata, outdata, errdata, ssh = genssh.run(
         "cd {};make -s {}.result".format(
             cfg.outp_dir,
-            filename[:filename.index('.')]
+            name
         ),
         cfg
     )
     data = [x.decode("utf-8") for x in outdata.read().splitlines()]
-    td.update(filename[:filename.index('.')], data)
+    td.update(name, data)
     ssh.close()
 
 

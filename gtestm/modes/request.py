@@ -1,47 +1,65 @@
 #!/usr/bin/env python3
+import stat
 import threading as th
 
 import gtestm.netcfg.config as config
 import gtestm.utils.testdata as testdata
 import gtestm.modes.run as run
+import gtestm.modes.run as runmet
 
 
 proglock = th.Lock()
 progress = None
+quant = 0
 
 
-class TestAllRunner:
-    def __init__(self, cfg: config.Config, hashlist: list):
+class TestAllRunner(th.Thread):
+    def __init__(self, cfg: config.Config, td, target, hashlist=None):
         """
         Initialize the runnable
         :param cfg: configuration data
         :param hashlist: List of files to run on
         """
+        super().__init__()
         self.cfg = cfg
-        self.hashlist = hashlist
-        self.td = testdata.TestData()
+        self.hashset = set(hashlist) if hashlist is not None else set(
+            [
+                direc.filename[:direc.filename.index(".")]
+                for direc
+                in filter(
+                    lambda direc: not stat.S_ISDIR(direc.st_mode),
+                    runmet.fetch_direc_list(self.cfg, runmet.direc_setup(cfg))
+                )
+            ]
+        )
+        self.td = td
+        self.report = target
+        self.daemon = True
 
     def run(self):
+        global proglock
+        global progress
+        global quant
         proglock.acquire()
         progress = 0
         proglock.release()
-        quant = len(self.hashlist)
-        for direc in self.hashlist:
-            proglock.acquire()
-            progress = self.td.total / quant
-            proglock.release()
+        quant = len(self.hashset)
+        for direc in self.hashset:
+            print(direc)
             run.run_test_single(direc, self.cfg, self.td)
-        proglock.release()
+            progress = self.td.total
+            self.report.event_generate("<<Updated>>")
+        self.report.event_generate("<<EndUpdate>>")
 
 
 class TestSingleRunner(TestAllRunner):
-    def __init__(self, cfg: config.Config, hashstr):
+    def __init__(self, cfg: config.Config, td, target, hashstr):
         """
         Initialize the data needed for a single test
         :param cfg: Configuration data for the test
         :param hashstr: file name
         """
-        super().__init__(cfg, [hashstr])
+        super().__init__(cfg, td, target, [hashstr])
 
 
 class Backend:
@@ -52,11 +70,12 @@ class Backend:
         self.localstore = th.local
         self.run_lock = th.Lock()
 
-    def do_full_refresh(self):
+    def do_full_refresh(self, trigger):
         """do_full_refresh() -> None
-        no return type, triggers backend to ssh and stuff"""
+        no return type, triggers backend to ssh and stuff
+        :param self1: """
         if self.run_lock.acquire(blocking=False):
-            self.run_thread = th.Thread(target=TestAllRunner())
+            self.run_thread = TestAllRunner(self.cfg, self.testdata, trigger)
             self.run_thread.start()
             self.run_lock.release()
             return True

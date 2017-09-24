@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 import gtestm.modes.request as req
+import gtestm.modes.run as runr
 
 
 class ScrollCanvas(ttk.Frame):
@@ -19,8 +20,7 @@ class ScrollCanvas(ttk.Frame):
             window=self.internal_frame
         )
 
-        self.wrapped_frame = SortableTable(self.internal_frame, ["hi", "hi2"], [str.__gt__, str.__gt__])
-        self.wrapped_frame.give_data([("first", "first2"), ("second", "second2")])
+        self.wrapped_frame = SortableTable(self.internal_frame, ["test", "state"], [str.__gt__, str.__gt__])
 
         self.vscroll = ttk.Scrollbar(self)
         self.hscroll = ttk.Scrollbar(self)
@@ -63,8 +63,8 @@ class ScrollCanvas(ttk.Frame):
     def _set_boxdimen(self, event):
         cd = self.canvas.winfo_width(), self.canvas.winfo_height()
         self.internal_frame.configure(
-            height=max(cd[1], self.internal_frame_max_height),
-            width=max(cd[0], self.internal_frame_max_width)
+            height=max(cd[1], max(self.internal_frame_max_height, self.internal_frame.winfo_reqheight())),
+            width=max(cd[0], max(self.internal_frame_max_width, self.internal_frame.winfo_reqwidth()))
         )
         self.canvas.configure(scrollregion=self.canvas.bbox(self.internal_frame_id))
 
@@ -101,6 +101,7 @@ class SortableTable(ttk.Frame):
         ]
         self.labels = [[] for _ in range(len(categories))]
 
+        self.bind()
         self._config_widgets()
         self._layout_widgets()
 
@@ -117,18 +118,50 @@ class SortableTable(ttk.Frame):
             # panel.grid(row=0, column=column, sticky=tk.E + tk.W + tk.N + tk.S)
             button.pack(side=tk.TOP, fill=tk.X)
 
-    def give_data(self, data):
-        for datum in data:
-            for panel, member in zip(self.category_panels, datum):
+    def give_data(self, data_dirt):
+        self.data = None
+        self.data = [(key_v, data_dirt[key_v]["status"]) for key_v in data_dirt]
+        self._avail_display()
+
+    def _avail_display(self):
+        for cat_labels in self.labels:
+            for label in cat_labels:
+                label.pack_forget()
+            cat_labels.clear()
+        for datum in self.data:
+            for panel, member, cat_labels in zip(self.category_panels, datum, self.labels):
                 label = ttk.Label(panel, text=str(member))
                 label.pack(fill=tk.X)
+                cat_labels.append(label)
+        colors = {
+            "Status.PASS": ["white", "green"],
+            "Status.FAIL": ["white", "red"],
+            "Status.TOUT": ["white", "blue"],
+            "Status.CERR": ["white", "black"]
+        }
+        for label in self.labels[self.categories.index("state")]:
+            label.configure(foreground=colors[label.cget("text")][0], background=colors[label.cget("text")][1])
+        # Generate a configure event
+        self.configure(
+            height=self.category_panels[0].winfo_height()
+        )
+        self.master.configure(
+            height=self.category_panels[0].winfo_height()
+        )
+        self.master.event_generate("<Configure>")
 
     def unsort(self):
         for button in self.category_buttons:
             button.unset_dir()
 
     def sort(self, direction, category):
-        pass
+        if self.data:
+            self.data = sorted(
+                self.data,
+                key=lambda data: data[self.categories.index(category)],
+                reverse=(direction == 1)
+            )
+        self._avail_display()
 
 
 class SortButton(ttk.Button):
@@ -142,15 +175,17 @@ class SortButton(ttk.Button):
 
     def unset_dir(self):
         self.sort_dir = None
+        self.configure(text=self.category)
 
     def call_sort(self):
+        save = self.sort_dir
         self.table.unsort()
-        if self.sort_dir is None:
+        if save is None or save == 1:
             self.sort_dir = 0
-        if self.sort_dir == 0:
+            self.configure(text=self.category + "V")
+        if save == 0:
             self.sort_dir = 1
-        if self.sort_dir == 1:
-            self.sort_dir = 0
+            self.configure(text=self.category+"^")
         self.table.sort(direction=self.sort_dir, category=self.category)
 
 
@@ -164,10 +199,14 @@ class CoreFrame(ttk.Frame):
         self.refresh_button = ttk.Button(self, command=CoreFrame.refresh)
         self.test_display = ScrollCanvas(self)
         self.state_bar = ttk.Progressbar(self)
+        self.progress_double = tk.DoubleVar(self)
         # Configure the widgets
         self._config_widgets()
         # Layout the widgets
         self._layout_widgets()
+
+        self.bind("<<Updated>>", self.fetch_new)
+        self.bind("<<EndUpdate>>", self.restore_completion)
 
     def _config_widgets(self):
         self.extern_frame_sty.configure('Extern.TFrame', background='red')
@@ -178,6 +217,7 @@ class CoreFrame(ttk.Frame):
         self.configure(style="Extern.TFrame")
         self.test_display.configure(style="Intern.TFrame")
         self.refresh_button.config(text="Refresh", command=self.refresh)
+        self.state_bar.configure(variable=self.progress_double)
 
     def _layout_widgets(self):
         self.pack(fill=tk.BOTH, expand=True)
@@ -189,13 +229,30 @@ class CoreFrame(ttk.Frame):
         self.test_display.update()
         self.test_display.event_generate("<<Configure>>")
 
-    def refresh(self):
-        print("Hi.")
+    def restore_completion(self, event=None):
+        self.state_bar.grid_forget()
+        self.refresh_button.grid(row=1, column=0, sticky=tk.E + tk.W)
+        t = self.service.get_tests()
+        print(t)
+        self.test_display.wrapped_frame.give_data(t)
+
+    def fetch_new(self, event=None):
+        print("Max:", req.quant, "\nStuff", req.progress)
+        self.state_bar.configure(maximum=req.quant)
+        self.progress_double.set(req.progress)
+
+    def refresh(self, event=None):
+        self.refresh_button.grid_forget()
+        self.state_bar.grid(row=1, column=0, sticky=tk.E + tk.W)
+        self.service.do_full_refresh(self)
+        self.state_bar.configure(maximum=1)
+        self.progress_double.set(0)
 
 
 if __name__ == "__main__":
     root = tk.Tk()
     root.columnconfigure(0, weight=1)
+    root.title("CSGeist")
     frame = CoreFrame(root)
     root.after(1, frame.initialize)
     root.mainloop()
