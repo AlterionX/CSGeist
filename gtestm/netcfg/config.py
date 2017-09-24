@@ -124,7 +124,7 @@ class Config:
         )
 
         for cat, val in setting_data:
-            cfg_dict[cat] = val
+            cfg_dict[cat.strip()] = val.strip()
 
         for req_key, prompt in Config.REQ_ELEM:
             ainp(cfg_dict, req_key, prompt)

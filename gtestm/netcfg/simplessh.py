@@ -23,7 +23,6 @@ def auth(cfg: config.Config):
     :return: The ssh session that was opened
     """
     ssh = paramiko.SSHClient()
-    ssh.load_system_host_keys()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy)
     ssh.connect(hostname=cfg.remote_host, username=cfg.remote_user, password=cfg.remote_pass)
     return ssh
