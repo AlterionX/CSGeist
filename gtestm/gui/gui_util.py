@@ -2,7 +2,11 @@
 import tkinter as tk
 from tkinter import ttk
 
+import platform
+
 import gtestm.modes.request as req
+
+OS = platform.system()
 
 
 class ScrollCanvas(ttk.Frame):
@@ -32,10 +36,26 @@ class ScrollCanvas(ttk.Frame):
         self._bind_events()
 
     def on_vertical(self, event):
-        self.canvas.yview_scroll(-1 * event.delta, 'units')
+        if OS == 'Linux':
+            if event.num == 4:
+                self.canvas.yview_scroll((-1)*2, "units")
+            elif event.num == 5:
+                self.canvas.yview_scroll(2, "units")
+        elif OS == 'Windows':
+            self.canvas.yview_scroll((-1)*int((event.delta/120)*2), "units") 
+        elif OS == 'Darwin':
+            self.canvas.yview_scroll(event.delta, "units")
 
     def on_horizontal(self, event):
-        self.canvas.xview_scroll(-1 * event.delta, 'units')
+        if OS == 'Linux':
+            if event.num == 4:
+                self.canvas.xview_scroll((-1)*2, "units")
+            elif event.num == 5:
+                self.canvas.xview_scroll(2, "units")
+        elif OS == 'Windows':
+            self.canvas.xview_scroll((-1)*int((event.delta/120)*2), "units") 
+        elif OS == 'Darwin':
+            self.canvas.xview_scroll(event.delta, "units")
 
     def _config_widgets(self):
         self.canvas_base_sty.configure("ScrollIntern.TFrame", background="green")
@@ -44,6 +64,7 @@ class ScrollCanvas(ttk.Frame):
         self.columnconfigure(1, weight=0)
         self.canvas.configure(scrollregion=self.canvas.bbox(self.internal_frame_id))
         self.hscroll.configure(orient=tk.HORIZONTAL)
+
         self.internal_frame.configure(style="ScrollIntern.TFrame")
 
     def _prep_scroll(self):
@@ -72,14 +93,14 @@ class ScrollCanvas(ttk.Frame):
         self.bind('<Visibility>', self._set_boxdimen)
         self.bind('<Configure>', self._set_boxdimen)
         self.bind('<<Configure>>', self._set_boxdimen)
-
-        self.bind('<MouseWheel>', self.on_vertical)
-        self.bind("<Button-4>", self.on_vertical)
-        self.bind("<Button-5>", self.on_vertical)
-
-        self.bind('<Shift-MouseWheel>', self.on_horizontal)
-        self.bind("<Shift-Button-4>", self.on_horizontal)
-        self.bind("<Shift-Button-5>", self.on_horizontal)
+        if OS == "Linux":
+            self.master.master.bind("<Button-4>", self.on_vertical,  add='+')
+            self.master.master.bind("<Button-5>", self.on_vertical,  add='+')
+            self.master.master.bind("<Shift-Button-4>", self.on_horizontal,  add='+')
+            self.master.master.bind("<Shift-Button-5>", self.on_horizontal,  add='+')
+        else:
+            self.master.master.bind('<MouseWheel>', self.on_vertical,  add='+')
+            self.master.master.bind('<Shift-MouseWheel>', self.on_horizontal,  add='+')
 
 
 class SortableTable(ttk.Frame):
@@ -101,7 +122,6 @@ class SortableTable(ttk.Frame):
         ]
         self.labels = [[] for _ in range(len(categories))]
 
-        self.bind()
         self._config_widgets()
         self._layout_widgets()
 
@@ -114,8 +134,8 @@ class SortableTable(ttk.Frame):
 
     def _layout_widgets(self):
         for panel, button, column in zip(self.category_panels, self.category_buttons, range(len(self.category_panels))):
-            panel.pack(expand=True, fill=tk.Y, side=tk.LEFT)
-            # panel.grid(row=0, column=column, sticky=tk.E + tk.W + tk.N + tk.S)
+            # panel.pack(expand=True, fill=tk.Y, side=tk.LEFT)
+            panel.grid(row=0, column=column, sticky=tk.E + tk.W + tk.N + tk.S)
             button.pack(side=tk.TOP, fill=tk.X)
 
     def give_data(self, data_dirt):
