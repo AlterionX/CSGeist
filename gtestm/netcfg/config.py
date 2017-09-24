@@ -5,7 +5,7 @@ import getpass
 # ask if not present
 def ainp(store, key, out, secure=False):
     """Ask for some data if it is not present"""
-    if key not in store:
+    if key not in store or store[key] == None:
         if secure:
             store[key] = getpass.getpass("Enter" + out + ":\n")
         else:
