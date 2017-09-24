@@ -165,27 +165,26 @@ class SortableTable(ttk.Frame):
 
 
 class SortButton(ttk.Button):
-    # TODO arrows for sorting direction
     def __init__(self, table, master=None, category=None):
         super().__init__(master)
         self.table = table
         self.category = category
         self.configure(command=self.call_sort, text=self.category)
-        self.sort_dir = None
+        self.unset_dir()
 
     def unset_dir(self):
         self.sort_dir = None
-        self.configure(text=self.category)
+        self.configure(text=self.category + "↕")
 
     def call_sort(self):
         save = self.sort_dir
         self.table.unsort()
         if save is None or save == 1:
             self.sort_dir = 0
-            self.configure(text=self.category + "V")
+            self.configure(text=self.category + "↓")
         if save == 0:
             self.sort_dir = 1
-            self.configure(text=self.category+"^")
+            self.configure(text=self.category+"↑")
         self.table.sort(direction=self.sort_dir, category=self.category)
 
 
@@ -230,8 +229,8 @@ class CoreFrame(ttk.Frame):
         self.test_display.event_generate("<<Configure>>")
 
     def restore_completion(self, event=None):
-        self.state_bar.grid_forget()
         self.refresh_button.grid(row=1, column=0, sticky=tk.E + tk.W)
+        self.state_bar.grid_forget()
         t = self.service.get_tests()
         print(t)
         self.test_display.wrapped_frame.give_data(t)
@@ -242,8 +241,8 @@ class CoreFrame(ttk.Frame):
         self.progress_double.set(req.progress)
 
     def refresh(self, event=None):
-        self.refresh_button.grid_forget()
         self.state_bar.grid(row=1, column=0, sticky=tk.E + tk.W)
+        self.refresh_button.grid_forget()
         self.service.do_full_refresh(self)
         self.state_bar.configure(maximum=1)
         self.progress_double.set(0)

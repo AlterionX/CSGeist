@@ -75,6 +75,7 @@ class Backend:
         no return type, triggers backend to ssh and stuff
         :param self1: """
         if self.run_lock.acquire(blocking=False):
+            self.testdata = testdata.TestData()
             self.run_thread = TestAllRunner(self.cfg, self.testdata, trigger)
             self.run_thread.start()
             self.run_lock.release()
@@ -120,6 +121,7 @@ class Backend:
     def run_test(self, hashstr):
         """run_test(hash: str) -> None"""
         if self.run_lock.acquire(blocking=False):
+            self.testdata = testdata.TestData()
             self.run_thread = th.Thread(target=TestSingleRunner(hashstr))
             self.run_thread.start()
             return True
