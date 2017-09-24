@@ -3,9 +3,9 @@ import getpass
 
 
 # ask if not present
-def ainp(store, key, out, secure=False):
+def ainp(store, key, out, secure=True):
     """Ask for some data if it is not present"""
-    if key not in store or store[key] == None:
+    if key not in store or store[key] == None or not store[key]:
         if secure:
             store[key] = getpass.getpass("Enter" + out + ":\n")
         else:
@@ -114,7 +114,7 @@ class Config:
             map(
                 lambda san_line: tuple(san_line.strip().split(':')),
                 filter(
-                    lambda line: line and line[0: 2] != "//",
+                    lambda line: line and line[0:2] != "//",
                     map(
                         lambda line: line.strip(),
                         open(cfg_file).readlines()
