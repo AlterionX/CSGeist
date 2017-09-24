@@ -1,8 +1,8 @@
+#!/bin/usr/env python3
 import tkinter as tk
 from tkinter import ttk
 
 import gtestm.modes.request as req
-import gtestm.modes.run as runr
 
 
 class ScrollCanvas(ttk.Frame):

@@ -17,7 +17,7 @@ def ainp(store, key, out, secure=False):
 class Config:
     """Manages the data needed for accessing remote tests and other configuration data."""
     # Where everything IS
-    CONFIG_FILE_DIR = "../../config"
+    CONFIG_FILE_DIR = "./config"
     # Constant information
     CURR_TEST_HOME = "~gheith/public/"
 
