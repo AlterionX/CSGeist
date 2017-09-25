@@ -97,9 +97,7 @@ class Config:
     # region Required data
     REQ_ELEM = [
         (GDC_USER_KEY, " username"),
-        (GDC_PASS_KEY, " password"),
-        (PROJ_DIR_KEY, ""),
-        (PROJ_LOC_KEY, "")
+        (GDC_PASS_KEY, " password")
     ]
 
     # endregion
