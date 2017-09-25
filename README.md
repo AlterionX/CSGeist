@@ -13,6 +13,8 @@ Edit "config-sample" to match your own information and rename it as "config".
 Run the CLI using "python3 -m gtestm.modes.run".
 Run the GUI using "python3 -m gtestm.gui.gui_util".
 
+If you have bash, there are three scripts in the root directory.
+
 Complete:
 - Run all test cases
 - Display test data
