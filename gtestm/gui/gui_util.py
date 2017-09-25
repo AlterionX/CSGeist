@@ -21,44 +21,32 @@ class LoginFrame(ttk.Frame):
         self.ut_id = ttk.Label(master, text="CS ID:")
         self.password = ttk.Label(master, text="Password:")
 
-        vcmd_1 = master.register(self.validate_ut_id)  # we have to wrap the command
-        self.ut_id_ = ttk.Entry(master, validate="key", validatecommand=(vcmd_1, '%P'))
-        vcmd_2 = master.register(self.validate_password)  # we have to wrap the command
-        self.password_ = ttk.Entry(master, show="*", validate="key", validatecommand=(vcmd_2, '%P'))
+        self.UTID = tk.StringVar()
+        self.PSSWD = tk.StringVar()
+        self.ut_id_ = ttk.Entry(master, textvariable=self.UTID)
+        self.password_ = ttk.Entry(master, show="*", textvariable=self.PSSWD)
 
         self.sign_in = ttk.Button(master, text="Sign In", command=self.update)
 
-        self.UTID = ""
-        self.PSSWD = ""
-
         self.render_layout()
+        
+        self.bind("<Return>", lambda: self.sign_in.invoked())
 
     def render_layout(self):
         self.ut_id.grid(row=0, column=0, sticky=tk.W)
         self.ut_id_.grid(row=0, column=1, columnspan=2, sticky=tk.E)
+        self.ut_id_.focus_force()
 
         self.password.grid(row=1, column=0, sticky=tk.W)
         self.password_.grid(row=1, column=1, columnspan=2, sticky=tk.E)
 
-        self.sign_in.grid(row=2, column=0)
-
-    def validate_ut_id(self, new_text):
-        if not len(new_text.strip()):
-            return False
-        self.UTID = new_text
-        return True
-
-    def validate_password(self, new_text):
-        if not len(new_text.strip()):
-            return False
-        self.PSSWD = new_text
-        return True
+        self.sign_in.grid(row=2, column=1)
 
     def update(self):
         print("Hello,", self.UTID);
-        if len(self.UTID) > 0 and len(self.PSSWD) > 0:
+        if len(self.UTID.get()) > 0 and len(self.PSSWD.get()) > 0:
             print("You have entered your login information");
-            self.service.set_profile(self.UTID, self.PSSWD)
+            self.service.set_profile(self.UTID.get(), self.PSSWD.get())
             self.master.master.event_generate("<<Refresh>>")
             self.master.destroy()
 
@@ -268,10 +256,10 @@ class CoreFrame(ttk.Frame):
         super().__init__(master=master)
         # Generate all gui components
         self.service = req.Backend()
-        self.extern_frame_sty = ttk.Style()
-        self.intern_frame_sty = ttk.Style()
         self.refresh_button = ttk.Button(self, command=CoreFrame.refresh)
         self.test_display = ScrollCanvas(self)
+        self.data_label = ttk.Label(self, text="")
+        self.state_label = ttk.Label(self, text="Hello")
         self.state_bar = ttk.Progressbar(self)
         self.progress_double = tk.DoubleVar(self)
         # Configure the widgets
@@ -285,45 +273,53 @@ class CoreFrame(ttk.Frame):
         self.bind("<<EndUpdate>>", self.restore_completion)
 
     def _config_widgets(self):
-        self.extern_frame_sty.configure('Extern.TFrame', background='red')
-        self.intern_frame_sty.configure('Intern.TFrame', background='blue')
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=0)
-        self.configure(style="Extern.TFrame")
-        self.test_display.configure(style="Intern.TFrame")
+        self.columnconfigure(1, weight=9)
+        self.rowconfigure(0, weight=0)
+        self.rowconfigure(2, weight=0)
+        self.rowconfigure(1, weight=1)
         self.refresh_button.config(text="Refresh", command=self.refresh)
         self.state_bar.configure(variable=self.progress_double)
 
     def _layout_widgets(self):
         self.pack(fill=tk.BOTH, expand=True)
-        self.test_display.grid(row=0, column=0, sticky=tk.N + tk.E + tk.S + tk.W)
-        self.refresh_button.grid(row=1, column=0, sticky=tk.E + tk.W)
+        self.test_display.grid(row=1, column=0, columnspan=2, sticky=tk.N + tk.E + tk.S + tk.W)
+        self.state_label.grid(row=0, column=0, padx=10, pady=5, sticky=tk.N + tk.E + tk.S + tk.W)
+        self.data_label.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky=tk.N + tk.E + tk.S + tk.W)
+        self.refresh_button.grid(row=0, column=1, sticky=tk.E + tk.W)
 
     def initialize(self):
-        print("configure")
         self.test_display.update()
         self.test_display.event_generate("<<Configure>>")
 
     def launch_dialog(self, event):
-        another = tk.Toplevel(master=self, bg='#ffffff',bd=0,height=50,width=600,highlightthickness=0,takefocus=True)
+        another = tk.Toplevel(self, bg='#ffffff',bd=0,height=50,width=600,highlightthickness=0,takefocus=True)
+        another.transient(self)
+        another.protocol("WM_DELETE_WINDOW", lambda: self.fail_cred_check(another))
         LoginFrame(another, self.service)
+        another.grab_set()
         another.mainloop()
+        another.wait_window(another)
+        
+    def fail_cred_check(self, window):
+        self.restore_completion()
+        window.destroy()
 
     def restore_completion(self, event=None):
-        self.refresh_button.grid(row=1, column=0, sticky=tk.E + tk.W)
+        self.refresh_button.grid(row=0, column=1, sticky=tk.E + tk.W)
         self.state_bar.grid_forget()
         t = self.service.get_tests()
-        print(t)
         self.test_display.wrapped_frame.give_data(t)
+        self.data_label.configure(text=str(self.service.testdata))
 
     def fetch_new(self, event=None):
         print("Max:", req.quant, "\nStuff", req.progress)
+        self.state_label.configure(text=str(req.progress)+"/"+str(req.quant))
         self.state_bar.configure(maximum=req.quant)
         self.progress_double.set(req.progress)
 
     def refresh(self, event=None):
-        self.state_bar.grid(row=1, column=0, sticky=tk.E + tk.W)
+        self.state_bar.grid(row=0, column=1, sticky=tk.N + tk.E + tk.S + tk.W)
         self.refresh_button.grid_forget()
         self.service.do_full_refresh(self)
         self.state_bar.configure(maximum=1)

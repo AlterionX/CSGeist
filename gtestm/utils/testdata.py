@@ -56,15 +56,13 @@ class TestData:
             self.comp_failed += 1
 
     def __str__(self):
-        print(
-            "Total: {} Passed: {} Failed: {} Timed Out: {} Compilation with makefile failed: {}".format(
-                self.total,
-                self.passed,
-                self.failed,
-                self.timed_out,
-                self.comp_failed
-            )
-        )
+        return "Total: {}, Passed: {}, Failed: {}, Timed Out: {}, Compilation failed: {}".format(
+			self.total,
+			self.passed,
+			self.failed,
+			self.timed_out,
+			self.comp_failed
+		)
 
 
 class Status(enum.Enum):
