@@ -37,6 +37,7 @@ def single_run(filename: str, cfg: config.Config, td: testdata.TestData = None, 
     if multi:
         cmd_str += ";mv ./{}.* ../".format(name)
 
+    print("Running", filename)
     indata, outdata, errdata, ssh = genssh.run(
         cmd_str,
         cfg,
@@ -47,6 +48,7 @@ def single_run(filename: str, cfg: config.Config, td: testdata.TestData = None, 
         return data
     td.update(name, data)
     ssh.close()
+    print("Finished", filename)
 
 
 def direc_setup(cfg: config.Config, multi=None):

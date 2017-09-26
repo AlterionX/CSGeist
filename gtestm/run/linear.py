@@ -12,7 +12,6 @@ def linear_run(cfg: config.Config, td: testdata.TestData, sd: testdata.StateData
     :return: None
     """
     remote_test_dir = gen.direc_setup(cfg)
-    print(remote_test_dir)
 
     tests = gen.fetch_test_list(cfg, remote_test_dir)
 

@@ -45,7 +45,6 @@ class TestThread(threading.Thread):
 def parallel_run(cfg, td, sd, multi=10):
     runlock.acquire()
     remote_test_dir = gen.direc_setup(cfg, multi=multi)
-    remote_test_dir = remote_test_dir
 
     tests = gen.fetch_test_list(cfg, remote_test_dir)
     sd.set_q(len(tests))
