@@ -3,8 +3,8 @@ import sys
 
 import gtestm.netcfg.config as config
 from gtestm.utils import testdata
-from run.parallel import parallel_run
-from run.linear import linear_run
+from gtestm.run.parallel import parallel_run
+from gtestm.run.linear import linear_run
 
 
 def main(args: list):

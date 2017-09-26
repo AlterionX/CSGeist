@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import time
 
-from netcfg import config
-from modes import cli
-from utils import testdata
+from gtestm.netcfg import config
+from gtestm.modes import cli
+from gtestm.utils import testdata
 
 
 def comp_serial_parallel():

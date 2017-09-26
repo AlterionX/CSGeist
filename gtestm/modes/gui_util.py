@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 
 import gui.gui_util as gu
-from run import request as req
+from gtestm.run import request as req
 
 OS = platform.system()
 

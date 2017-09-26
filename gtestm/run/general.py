@@ -1,8 +1,8 @@
 import stat
 
-from netcfg import config
-from utils import testdata
-from netcfg import simplessh as genssh
+from gtestm.netcfg import config
+from gtestm.utils import testdata
+from gtestm.netcfg import simplessh as genssh
 
 
 def fetch_direc_list(cfg: config.Config, direc: str, all=False):

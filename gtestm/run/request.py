@@ -1,8 +1,8 @@
 import threading as th
 
-from netcfg import config
-from utils import testdata
-from run import general as gen
+from gtestm.netcfg import config
+from gtestm.utils import testdata
+from gtestm.run import general as gen
 
 proglock = th.Lock()
 progress = None

@@ -3,7 +3,7 @@ import getpass
 
 
 # ask if not present
-def ainp(store, key, out, secure=False):
+def ainp(store, key, out, secure=True):
     if key not in store or store[key] is None or not store[key]:
         if secure:
             store[key] = getpass.getpass("Enter" + out + ":\n")

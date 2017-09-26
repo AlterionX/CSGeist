@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import paramiko
 
-import gtestm.netcfg.config as config
+from gtestm.netcfg import config
 
 
 def run(cmd: str, cfg: config.Config, otherhost=None):

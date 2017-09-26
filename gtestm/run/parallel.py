@@ -1,8 +1,8 @@
 import queue
 import threading
 
-from run import general as gen
-from utils import utlab
+from gtestm.run import general as gen
+from gtestm.utils import utlab
 
 runlock = threading.Lock()
 
