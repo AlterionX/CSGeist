@@ -26,7 +26,21 @@ class TestData:
         :return: None
         """
         self.total += 1
-        if "... pass ---" == data[0][-len("... pass ---"):len(data[0])]:
+        if len(data) == 0:
+            self.tests[file_hash] = {
+                TestData.STATUS_KEY: Status.CERR,
+                TestData.DATA_KEY: data,
+                TestData.FLAG_KEY: fetch_flags(file_hash)
+            }
+            self.comp_failed += 1
+        elif "recipe for target 'kernel.o' failed" in data[0] or "Makefile:6: recipe for target 'kernel' failed" in data[0]:
+            self.tests[file_hash] = {
+                TestData.STATUS_KEY: Status.CERR,
+                TestData.DATA_KEY: data,
+                TestData.FLAG_KEY: fetch_flags(file_hash)
+            }
+            self.comp_failed += 1
+        elif "... pass ---" == data[0][-len("... pass ---"):len(data[0])]:
             self.tests[file_hash] = {
                 TestData.STATUS_KEY: Status.PASS,
                 TestData.DATA_KEY: data,
@@ -47,14 +61,12 @@ class TestData:
                 TestData.FLAG_KEY: fetch_flags(file_hash)
             }
             self.failed += 1
-        elif "failed" == data[-1][-len("failed"):len(data[-1])] and "Makefile:32: recipe for target " == data[-1][:len(
-                "Makefile:32: recipe for target ")]:
-            self.tests[file_hash] = {
-                TestData.STATUS_KEY: Status.CERR,
-                TestData.DATA_KEY: data,
-                TestData.FLAG_KEY: fetch_flags(file_hash)
-            }
-            self.comp_failed += 1
+        else:
+            print("Please all output after this line to \"benjamin.xu<at>utexas.edu\"")
+            print(file_hash)
+            print(data)
+            exit(-1)
+        print(file_hash, data)
 
     def __str__(self):
         return "Total: {}, Passed: {}, Failed: {}, Timed Out: {}, Compilation failed: {}".format(

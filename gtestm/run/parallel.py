@@ -19,6 +19,7 @@ class TestJob:
                 self.name, self.cfg, multi=num, otherhost="{}.cs.utexas.edu".format(machine.host)
             )
         )
+        print(self.name, data)
         rq.put(data)
 
 
@@ -65,8 +66,11 @@ def parallel_run(cfg, td, sd, multi=10):
 
     jq.join()
 
-    while not rq.empty():
-        data = rq.get()
+    while True:
+        try:
+            data = rq.get(timeout=5)
+        except queue.Empty:
+            break
         td.update(*data)
 
     runlock.release()
