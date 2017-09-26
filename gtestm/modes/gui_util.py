@@ -3,7 +3,7 @@ import platform
 import tkinter as tk
 from tkinter import ttk
 
-import gui.gui_util as gu
+import gtestm.gui.gui_util as gu
 from gtestm.run import request as req
 
 OS = platform.system()
