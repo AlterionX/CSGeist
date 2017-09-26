@@ -1,4 +1,4 @@
-A simple to use interface for running tests on the lab machines in conjunction with Gheith's testing system.
+A simple to use interface for running tests on the lab machines in conjunction with a public directory of tests.
 
 See config file for details about how to change the configuration information.
 
@@ -10,26 +10,25 @@ Ensure the python 3 version of paramiko is installed with the command "pip3 inst
 
 Edit "config-sample" to match your own information and rename it as "config".
 
-Run the CLI using "python3 -m gtestm.modes.run".
-Run the GUI using "python3 -m gtestm.gui.gui_util".
+Run the CLI using "python3 -m gtestm.modes.cli".
+Run the GUI using "python3 -m gtestm.modes.gui_util".
 
 If you have bash, there are three scripts in the root directory.
 
 Complete:
-- Run all test cases
-- Display test data
-- GUI interface for test running
-- CLI script for test running
+- Run/Display all test cases
+- GUI/CLI interface for test running
+- Sorting test cases by name and pass/fail state
 - GUI/CLI dynamic login info request
+- CLI parallellized testing
 
 In progress:
-- Parallellized testing
-- Sorting test cases by name and pass/fail state
+- GUI parallelized testing
 - Selective testing & test data replacement
 - Flagging tests (invalid)
 - Batch running selected tests
-- Better GUI
 - Test result caching
 - Duplicate test detection
 - Possible related test detection
+- Better GUI
 - ... and more

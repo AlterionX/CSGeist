@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-
 class EmailInfo:
     def __init__(self, tests, assignment):
         self.tests = []
@@ -36,7 +34,7 @@ def scrape(email):
 
 
 if __name__ == "__main__":
-    hi = """********* tests in ~gheith/public/cs439h_f17_p2
+    hi = """********* tests in ~/public/cs439h_f17_p2
 --- 01fe179233bc7ebfa55002668f23eb3d60ed0940 pass ---
 --- 06cab6755047830d48f632190204262c1c2ae2a9 pass ---
 --- 0917cf7ae0c64276b4798c54a98d8d78ed37233a pass ---

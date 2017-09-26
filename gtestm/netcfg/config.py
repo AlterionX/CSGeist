@@ -3,9 +3,8 @@ import getpass
 
 
 # ask if not present
-def ainp(store, key, out, secure=True):
-    """Ask for some data if it is not present"""
-    if key not in store or store[key] == None or not store[key]:
+def ainp(store, key, out, secure=False):
+    if key not in store or store[key] is None or not store[key]:
         if secure:
             store[key] = getpass.getpass("Enter" + out + ":\n")
         else:
@@ -15,11 +14,9 @@ def ainp(store, key, out, secure=True):
 
 
 class Config:
-    """Manages the data needed for accessing remote tests and other configuration data."""
     # Where everything IS
     CONFIG_FILE_DIR = "./config"
-    # Constant information
-    CURR_TEST_HOME = "~gheith/public/"
+    SIMULT = 10
 
     # region Data key strings
     # Remote access data
@@ -31,6 +28,7 @@ class Config:
     LCL_PASS_KEY = "local_pass"
     LCL_HOSTNAME_KEY = "local_host"  # should be detected
     # Test IO data
+    TEST_DIR_KEY = "test_dir"
     PROJ_LOC_KEY = "proj_loc"
     PROJ_DIR_KEY = "proj_dir"
     OUTP_LOC_KEY = "outp_loc"
@@ -78,6 +76,7 @@ class Config:
         LCL_USER_KEY: None,
         LCL_PASS_KEY: None,
         LCL_HOSTNAME_KEY: LCL_HOSTNAME_DEF,
+        TEST_DIR_KEY: None,
         PROJ_LOC_KEY: None,
         PROJ_DIR_KEY: None,
         OUTP_LOC_KEY: OUTP_LOC_DEF,
@@ -109,7 +108,7 @@ class Config:
 
     def check_req(self):
         for key, prompt in Config.REQ_ELEM:
-            if key not in self.store or self.store[key] == None or not self.store[key]:
+            if key not in self.store or self.store[key] is None or not self.store[key]:
                 return True
         return False
 
@@ -155,6 +154,8 @@ class Config:
 
             local_port=22,
 
+            test_dir=ENV_VARS[TEST_DIR_KEY],
+
             proj_loc=ENV_VARS[PROJ_LOC_KEY],
             proj_dir=ENV_VARS[PROJ_DIR_KEY],
 
@@ -172,6 +173,8 @@ class Config:
             mi=ENV_VARS[TIME_MI_KEY],
             sc=ENV_VARS[TIME_SC_KEY]
     ):
+        self.test_dir = test_dir
+
         self.remote_host = remote_host
         self.remote_user = remote_user
         self.remote_pass = remote_pass

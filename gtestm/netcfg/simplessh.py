@@ -4,27 +4,31 @@ import paramiko
 import gtestm.netcfg.config as config
 
 
-def run(cmd: str, cfg: config.Config):
+def run(cmd: str, cfg: config.Config, otherhost=None):
     """
     Wrapper for paramiko's ssh exec_command function.
     :param cmd: Command to run on a remote
     :param cfg: Configuration data
     :return: A 4-tuple of indata, outdata, errdata, ssh_channel
     """
-    ssh = auth(cfg)
+    if otherhost is None:
+        otherhost = cfg.remote_host
+    ssh = auth(cfg, otherhost)
     ind, outd, errd = ssh.exec_command(cmd)
     return ind, outd, errd, ssh
 
 
-def auth(cfg: config.Config):
+def auth(cfg: config.Config, otherhost=None):
     """
     Based on a provided configuration, connect using an ssh connection
     :param cfg: Configuration to use while connecting
     :return: The ssh session that was opened
     """
+    if otherhost is None:
+        otherhost = cfg.remote_host
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy)
-    ssh.connect(hostname=cfg.remote_host, username=cfg.remote_user, password=cfg.remote_pass)
+    ssh.connect(hostname=otherhost, username=cfg.remote_user, password=cfg.remote_pass)
     return ssh
 
 

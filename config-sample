@@ -2,18 +2,21 @@
 remote_user:
 remote_pass:
 
-//A host
-remote_host:linux.cs.utexas.edu
+//This is the host used to setup the directories
+remote_host:somehost.cs.utexas.edu
 
-//Where your project files are
-proj_dir:~/WhatAreYouDoing/clstu_csXXXh_sXX_pX
+//Where the tests are
+test_dir:~somebody/something/testsparentdirectory
+
+//Where your project files are, assumes you have NOT renamed your git repo's directory from user_cls_sem_num
+proj_dir:~/WhatAreYouDoing/parentofprojectdirectory
 
 //Where the program will use for scratch work
-outp_dir:~/WhatAreYouDoing/gtestm_clstu_csXXXh_sXX_pX
+outp_dir:~/someotherdirectoryicandestroy
 
 //Info on the current project
+curr_proj_cls:csXXX?
 curr_proj_sem:sXX
-curr_proj_cls:csXXXh
 curr_proj_num:pX
 
 //These don't matter yet

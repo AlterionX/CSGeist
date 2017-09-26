@@ -1,4 +1,5 @@
 import enum
+import threading
 
 
 class TestData:
@@ -57,12 +58,31 @@ class TestData:
 
     def __str__(self):
         return "Total: {}, Passed: {}, Failed: {}, Timed Out: {}, Compilation failed: {}".format(
-			self.total,
-			self.passed,
-			self.failed,
-			self.timed_out,
-			self.comp_failed
-		)
+            self.total,
+            self.passed,
+            self.failed,
+            self.timed_out,
+            self.comp_failed
+        )
+
+
+class StateData:
+    def __init__(self):
+        self.quant = 0
+
+        self.progress = 0
+        self.proglock = threading.Lock()
+
+    def set_q(self, q):
+        self.quant = q
+
+    def incre_p(self):
+        self.proglock.acquire()
+        self.progress += 1
+        self.proglock.release()
+
+    def reset_p(self):
+        self.progress = 0
 
 
 class Status(enum.Enum):
@@ -91,6 +111,7 @@ class Status(enum.Enum):
 
 class Flags:
     """Flags set by users: potentially have networking here"""
+
     def __init__(self, invalid: bool = False):
         self.invalid = invalid
 
@@ -102,4 +123,3 @@ def fetch_flags(file_hash):
     :return: A Flags object
     """
     return Flags(False)
-

@@ -1,12 +1,41 @@
-#!/bin/usr/env python3
+import platform
 import tkinter as tk
 from tkinter import ttk
 
-import platform
-
-import gtestm.modes.request as req
-
 OS = platform.system()
+
+
+class DialogToplevel(tk.Toplevel):
+    def __init__(self, master):
+        super().__init__(master)
+        self.config(bd=0, height=50, width=600, highlightthickness=0, takefocus=True)
+        self.transient(self)
+        self.cancel_action = None
+        self.success_action = None
+        self.protocol("WM_DELETE_WINDOW", self.cancel_action)
+
+    def set_internal(self, cancel=None, success=None, cancel_action=None, success_action=None):
+        self.cancel_action = cancel_action
+        self.success_action = success_action
+        if cancel is not None:
+            cancel.config(onclick=self.cancel)
+        if success is not None:
+            cancel.config(onclick=self.success)
+
+    def cancel(self):
+        if self.cancel_action is not None:
+            self.cancel_action()
+        self.destroy()
+
+    def success(self):
+        if self.success_action is not None:
+            self.success_action()
+        self.destroy()
+
+    def begin(self):
+        self.grab_set()
+        self.mainloop()
+        self.wait_window(self)
 
 
 class LoginFrame(ttk.Frame):
@@ -18,38 +47,34 @@ class LoginFrame(ttk.Frame):
 
         self.master.title("G Test Manager")
 
-        self.ut_id = ttk.Label(master, text="CS ID:")
-        self.password = ttk.Label(master, text="Password:")
-
-        self.UTID = tk.StringVar()
-        self.PSSWD = tk.StringVar()
-        self.ut_id_ = ttk.Entry(master, textvariable=self.UTID)
-        self.password_ = ttk.Entry(master, show="*", textvariable=self.PSSWD)
+        self.utid_var = tk.StringVar()
+        self.utid_label = ttk.Label(master, text="CS ID:")
+        self.utid_entry = ttk.Entry(master, textvariable=self.utid_var)
+        self.psswd_var = tk.StringVar()
+        self.psswd_label = ttk.Label(master, text="Password:")
+        self.psswd_entry = ttk.Entry(master, show="*", textvariable=self.psswd_var)
 
         self.sign_in = ttk.Button(master, text="Sign In", command=self.update)
 
         self.render_layout()
-        
-        self.bind("<Return>", lambda: self.sign_in.invoked())
+
+        self.master.bind("<Return>", self.update)
 
     def render_layout(self):
-        self.ut_id.grid(row=0, column=0, sticky=tk.W)
-        self.ut_id_.grid(row=0, column=1, columnspan=2, sticky=tk.E)
-        self.ut_id_.focus_force()
+        self.utid_label.grid(row=0, column=0, sticky=tk.W)
+        self.utid_entry.grid(row=0, column=1, columnspan=2, sticky=tk.E)
+        self.utid_entry.focus_force()
 
-        self.password.grid(row=1, column=0, sticky=tk.W)
-        self.password_.grid(row=1, column=1, columnspan=2, sticky=tk.E)
+        self.psswd_label.grid(row=1, column=0, sticky=tk.W)
+        self.psswd_entry.grid(row=1, column=1, columnspan=2, sticky=tk.E)
 
         self.sign_in.grid(row=2, column=1)
 
-    def update(self):
-        print("Hello,", self.UTID);
-        if len(self.UTID.get()) > 0 and len(self.PSSWD.get()) > 0:
-            print("You have entered your login information");
-            self.service.set_profile(self.UTID.get(), self.PSSWD.get())
+    def update(self, event=None):
+        if len(self.utid_var.get()) > 0 and len(self.psswd_var.get()) > 0:
+            self.service.set_profile(self.utid_var.get(), self.psswd_var.get())
             self.master.master.event_generate("<<Refresh>>")
             self.master.destroy()
-
 
 
 class ScrollCanvas(ttk.Frame):
@@ -81,22 +106,22 @@ class ScrollCanvas(ttk.Frame):
     def on_vertical(self, event):
         if OS == 'Linux':
             if event.num == 4:
-                self.canvas.yview_scroll((-1)*2, "units")
+                self.canvas.yview_scroll((-1) * 2, "units")
             elif event.num == 5:
                 self.canvas.yview_scroll(2, "units")
         elif OS == 'Windows':
-            self.canvas.yview_scroll((-1)*int((event.delta/120)*2), "units") 
+            self.canvas.yview_scroll((-1) * int((event.delta / 120) * 2), "units")
         elif OS == 'Darwin':
             self.canvas.yview_scroll(event.delta, "units")
 
     def on_horizontal(self, event):
         if OS == 'Linux':
             if event.num == 4:
-                self.canvas.xview_scroll((-1)*2, "units")
+                self.canvas.xview_scroll((-1) * 2, "units")
             elif event.num == 5:
                 self.canvas.xview_scroll(2, "units")
         elif OS == 'Windows':
-            self.canvas.xview_scroll((-1)*int((event.delta/120)*2), "units") 
+            self.canvas.xview_scroll((-1) * int((event.delta / 120) * 2), "units")
         elif OS == 'Darwin':
             self.canvas.xview_scroll(event.delta, "units")
 
@@ -137,13 +162,13 @@ class ScrollCanvas(ttk.Frame):
         self.bind('<Configure>', self._set_boxdimen)
         self.bind('<<Configure>>', self._set_boxdimen)
         if OS == "Linux":
-            self.master.master.bind("<Button-4>", self.on_vertical,  add='+')
-            self.master.master.bind("<Button-5>", self.on_vertical,  add='+')
-            self.master.master.bind("<Shift-Button-4>", self.on_horizontal,  add='+')
-            self.master.master.bind("<Shift-Button-5>", self.on_horizontal,  add='+')
+            self.master.master.bind("<Button-4>", self.on_vertical, add='+')
+            self.master.master.bind("<Button-5>", self.on_vertical, add='+')
+            self.master.master.bind("<Shift-Button-4>", self.on_horizontal, add='+')
+            self.master.master.bind("<Shift-Button-5>", self.on_horizontal, add='+')
         else:
-            self.master.master.bind('<MouseWheel>', self.on_vertical,  add='+')
-            self.master.master.bind('<Shift-MouseWheel>', self.on_horizontal,  add='+')
+            self.master.master.bind('<MouseWheel>', self.on_vertical, add='+')
+            self.master.master.bind('<Shift-MouseWheel>', self.on_horizontal, add='+')
 
 
 class SortableTable(ttk.Frame):
@@ -169,9 +194,6 @@ class SortableTable(ttk.Frame):
         self._layout_widgets()
 
     def _config_widgets(self):
-        """self.rowconfigure(0, weight=1)
-        for column in range(len(self.category_panels)):
-            self.columnconfigure(column, weight=1)"""
         for panel in self.category_panels:
             panel.configure(borderwidth=2, relief="groove")
 
@@ -234,6 +256,7 @@ class SortButton(ttk.Button):
         self.category = category
         self.configure(command=self.call_sort, text=self.category)
         self.unset_dir()
+        self.sort_dir = None
 
     def unset_dir(self):
         self.sort_dir = None
@@ -247,89 +270,9 @@ class SortButton(ttk.Button):
             self.configure(text=self.category + "↓")
         if save == 0:
             self.sort_dir = 1
-            self.configure(text=self.category+"↑")
+            self.configure(text=self.category + "↑")
         self.table.sort(direction=self.sort_dir, category=self.category)
 
 
-class CoreFrame(ttk.Frame):
-    def __init__(self, master=None):
-        super().__init__(master=master)
-        # Generate all gui components
-        self.service = req.Backend()
-        self.refresh_button = ttk.Button(self, command=CoreFrame.refresh)
-        self.test_display = ScrollCanvas(self)
-        self.data_label = ttk.Label(self, text="")
-        self.state_label = ttk.Label(self, text="Hello")
-        self.state_bar = ttk.Progressbar(self)
-        self.progress_double = tk.DoubleVar(self)
-        # Configure the widgets
-        self._config_widgets()
-        # Layout the widgets
-        self._layout_widgets()
-
-        self.bind("<<ReqData>>", self.launch_dialog)
-        self.bind("<<Refresh>>", self.refresh)
-        self.bind("<<Updated>>", self.fetch_new)
-        self.bind("<<EndUpdate>>", self.restore_completion)
-
-    def _config_widgets(self):
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=9)
-        self.rowconfigure(0, weight=0)
-        self.rowconfigure(2, weight=0)
-        self.rowconfigure(1, weight=1)
-        self.refresh_button.config(text="Refresh", command=self.refresh)
-        self.state_bar.configure(variable=self.progress_double)
-
-    def _layout_widgets(self):
-        self.pack(fill=tk.BOTH, expand=True)
-        self.test_display.grid(row=1, column=0, columnspan=2, sticky=tk.N + tk.E + tk.S + tk.W)
-        self.state_label.grid(row=0, column=0, padx=10, pady=5, sticky=tk.N + tk.E + tk.S + tk.W)
-        self.data_label.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky=tk.N + tk.E + tk.S + tk.W)
-        self.refresh_button.grid(row=0, column=1, sticky=tk.E + tk.W)
-
-    def initialize(self):
-        self.test_display.update()
-        self.test_display.event_generate("<<Configure>>")
-
-    def launch_dialog(self, event):
-        another = tk.Toplevel(self, bg='#ffffff',bd=0,height=50,width=600,highlightthickness=0,takefocus=True)
-        another.transient(self)
-        another.protocol("WM_DELETE_WINDOW", lambda: self.fail_cred_check(another))
-        LoginFrame(another, self.service)
-        another.grab_set()
-        another.mainloop()
-        another.wait_window(another)
-        
-    def fail_cred_check(self, window):
-        self.restore_completion()
-        window.destroy()
-
-    def restore_completion(self, event=None):
-        self.refresh_button.grid(row=0, column=1, sticky=tk.E + tk.W)
-        self.state_bar.grid_forget()
-        t = self.service.get_tests()
-        self.test_display.wrapped_frame.give_data(t)
-        self.data_label.configure(text=str(self.service.testdata))
-
-    def fetch_new(self, event=None):
-        print("Max:", req.quant, "\nStuff", req.progress)
-        self.state_label.configure(text=str(req.progress)+"/"+str(req.quant))
-        self.state_bar.configure(maximum=req.quant)
-        self.progress_double.set(req.progress)
-
-    def refresh(self, event=None):
-        self.state_bar.grid(row=0, column=1, sticky=tk.N + tk.E + tk.S + tk.W)
-        self.refresh_button.grid_forget()
-        self.service.do_full_refresh(self)
-        self.state_bar.configure(maximum=1)
-        self.progress_double.set(0)
-
-
 if __name__ == "__main__":
-    root = tk.Tk()
-    root.columnconfigure(0, weight=1)
-    root.title("CSGeist")
-    frame = CoreFrame(root)
-    root.after(1, frame.initialize)
-    root.mainloop()
+    print("This platform is being transitioned. Please use gtestm.modes.gui_util instead.")
