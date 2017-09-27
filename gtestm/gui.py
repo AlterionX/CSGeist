@@ -1,9 +1,9 @@
-#!/bin/usr/env python3
+#!/usr/bin/env python3
 import platform
 import tkinter as tk
 from tkinter import ttk
 
-import gtestm.gui.gui_util as gu
+from gtestm.gui import gui_util as gu
 from gtestm.run import request as req
 
 OS = platform.system()

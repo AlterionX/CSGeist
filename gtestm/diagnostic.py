@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import time
 
+from gtestm import cli
 from gtestm.netcfg import config
-from gtestm.modes import cli
 from gtestm.run import general
 from gtestm.utils import testdata
 

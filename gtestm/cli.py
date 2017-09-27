@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 
-import gtestm.netcfg.config as config
+from gtestm.netcfg import config
 from gtestm.utils import testdata
 from gtestm.run.parallel import parallel_run
 from gtestm.run.linear import linear_run
@@ -10,7 +10,7 @@ from gtestm.run.linear import linear_run
 def main(args: list):
     flags = {}
     for i in range(len(args)):
-        if sys.argv[i].index("-") == 0:
+        if '-' in args[i] and args[i].index("-") == 0:
             addi = None
             if i + 1 < len(sys.argv) and sys.argv[i + 1][0] != '-':
                 addi = sys.argv[i + 1]

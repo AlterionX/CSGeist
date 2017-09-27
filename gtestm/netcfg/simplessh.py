@@ -2,6 +2,7 @@
 import paramiko
 
 from gtestm.netcfg import config
+from gtestm.utils import utlab
 
 
 def run(cmd: str, cfg: config.Config, otherhost=None):
@@ -12,7 +13,8 @@ def run(cmd: str, cfg: config.Config, otherhost=None):
     :return: A 4-tuple of indata, outdata, errdata, ssh_channel
     """
     if otherhost is None:
-        otherhost = cfg.remote_host
+        machines = utlab.grab_all()
+        otherhost = "{}.cs.utexas.edu".format(machines[0].host)
     ssh = auth(cfg, otherhost)
     ind, outd, errd = ssh.exec_command(cmd)
     return ind, outd, errd, ssh
@@ -25,7 +27,8 @@ def auth(cfg: config.Config, otherhost=None):
     :return: The ssh session that was opened
     """
     if otherhost is None:
-        otherhost = cfg.remote_host
+        machines = utlab.grab_all()
+        otherhost = "{}.cs.utexas.edu".format(machines[0].host)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy)
     ssh.connect(hostname=otherhost, username=cfg.remote_user, password=cfg.remote_pass)

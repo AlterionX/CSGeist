@@ -1,6 +1,6 @@
-from gtestm.netcfg import config
-from gtestm.run import general as gen
-from gtestm.utils import testdata
+from netcfg import config
+from run import general as gen
+from utils import testdata
 
 
 def linear_run(cfg: config.Config, td: testdata.TestData, sd: testdata.StateData):

@@ -1,8 +1,8 @@
 import stat
 
-from gtestm.netcfg import config
-from gtestm.utils import testdata
-from gtestm.netcfg import simplessh as genssh
+from netcfg import config
+from utils import testdata
+from netcfg import simplessh as genssh
 
 
 def fetch_direc_list(cfg: config.Config, direc: str, all=False):
@@ -24,7 +24,7 @@ def fetch_test_list(cfg: config.Config, direc: str):
     )))
 
 
-def single_run(filename: str, cfg: config.Config, td: testdata.TestData = None, multi=None, otherhost=None):
+def single_run(filename: str, cfg: config.Config, td: testdata.TestData = None, multi: int = None, otherhost: str = None):
     if otherhost is None:
         otherhost = cfg.remote_host
     name = filename if '.' not in filename else filename[:filename.index('.')]
