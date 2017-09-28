@@ -1,18 +1,29 @@
 #!/usr/bin/env python3
 import platform
 import tkinter as tk
+from argparse import Namespace
 from tkinter import ttk
 
-from gtestm.gui import gui_util as gu
+from gtestm.gui_utils import gui_util as gu
 from gtestm.run import request as req
+from netcfg import config
 
 OS = platform.system()
+
+
+def main(args: Namespace, cfg: config.Config):
+    root = tk.Tk()
+    root.columnconfigure(0, weight=1)
+    root.title("CSGeist")
+    frame = CoreFrame(root)
+    root.after(1, frame.initialize)
+    root.mainloop()
 
 
 class CoreFrame(ttk.Frame):
     def __init__(self, master=None):
         super().__init__(master=master)
-        # Generate all gui components
+        # Generate all gui_utils components
         self.service = req.Backend()
         self.refresh_button = ttk.Button(self, command=CoreFrame.refresh)
         self.test_display = gu.ScrollCanvas(self)
@@ -85,9 +96,4 @@ class CoreFrame(ttk.Frame):
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    root.columnconfigure(0, weight=1)
-    root.title("CSGeist")
-    frame = CoreFrame(root)
-    root.after(1, frame.initialize)
-    root.mainloop()
+    print("Please launch main.py, instead, with the following command: main.py -m gui_utils")

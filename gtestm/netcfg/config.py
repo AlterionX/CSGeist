@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import getpass
+import configparser
 
 
 # ask if not present
@@ -15,7 +16,7 @@ def ainp(store, key, out, secure=True):
 
 class Config:
     # Where everything IS
-    CONFIG_FILE_DIR = "./config"
+    DEF_CFG_FILE = "../config"
     SIMULT = 10
 
     # region Data key strings
@@ -57,9 +58,9 @@ class Config:
     # PROJ_DIR_DEF
     OUTP_LOC_DEF = GDC_HOSTNAME_DEF
     OUTP_DIR_DEF = "~/gtestm_cp_dir"
-    CURR_PROJ_SEM_DEF = "cs439h"
-    CURR_PROJ_CLS_DEF = "f17"
-    CURR_PROJ_NUM_DEF = "p2"
+    # CURR_PROJ_SEM_DEF
+    # CURR_PROJ_CLS_DEF
+    # CURR_PROJ_NUM_DEF
     # TIME_YR_DEF = "year"
     # TIME_MN_DEF = "month"
     # TIME_DY_DEF = "day"
@@ -81,9 +82,9 @@ class Config:
         PROJ_DIR_KEY: None,
         OUTP_LOC_KEY: OUTP_LOC_DEF,
         OUTP_DIR_KEY: OUTP_DIR_DEF,
-        CURR_PROJ_SEM_KEY: CURR_PROJ_SEM_DEF,
-        CURR_PROJ_CLS_KEY: CURR_PROJ_CLS_DEF,
-        CURR_PROJ_NUM_KEY: CURR_PROJ_NUM_DEF,
+        CURR_PROJ_SEM_KEY: None,
+        CURR_PROJ_CLS_KEY: None,
+        CURR_PROJ_NUM_KEY: None,
         TIME_YR_KEY: None,
         TIME_MN_KEY: None,
         TIME_DY_KEY: None,
@@ -95,13 +96,18 @@ class Config:
 
     # region Required data
     REQ_ELEM = [
-        (GDC_USER_KEY, " username"),
-        (GDC_PASS_KEY, " password")
+        (GDC_USER_KEY, " username", False),
+        (GDC_PASS_KEY, " password", True),
+        (TEST_DIR_KEY, " the parent directory of the source of all the tests", False),
+        (PROJ_DIR_KEY, " the parent directory of where your projects are located", False),
+        (CURR_PROJ_CLS_KEY, " class(cs???)", False),
+        (CURR_PROJ_SEM_KEY, " semester(<semester letter><year>)", False),
+        (CURR_PROJ_NUM_KEY, " project number(p<number>)", False)
     ]
 
     # endregion
 
-    def __init__(self, cfg_file=CONFIG_FILE_DIR, delay_login=False):
+    def __init__(self, cfg_file=DEF_CFG_FILE, delay_login=False):
         self.delay_login = delay_login
         self.store = self._pull(cfg_file)
         self._init(**self.store)
@@ -134,8 +140,8 @@ class Config:
         if self.delay_login:
             return cfg_dict
 
-        for req_key, prompt in Config.REQ_ELEM:
-            ainp(cfg_dict, req_key, prompt)
+        for req_key, prompt, hide in Config.REQ_ELEM:
+            ainp(cfg_dict, req_key, prompt, secure=hide)
 
         return cfg_dict
 

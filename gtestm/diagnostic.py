@@ -3,6 +3,7 @@ import time
 
 from gtestm import cli
 from gtestm.netcfg import config
+from gtestm.run import linear
 from gtestm.run import general
 from gtestm.utils import testdata
 
@@ -18,7 +19,7 @@ def comp_serial_parallel():
 
     start = time.time()
     print("Starting serial tests")
-    print(cli.linear_run(cfg, serial_td, serial_sd))
+    print(linear.linear_run(cfg, serial_td, serial_sd))
     serial_rt = time.time() - start
     print("Took", time.time() - start, "seconds")
     print("Starting parallel tests")
@@ -43,7 +44,6 @@ def parallel_check():
     parallel_sd = testdata.StateData()
 
     tests = general.fetch_test_list(cfg, general.direc_setup(cfg, multi=10))
-    print(tests[0])
 
     print(cli.parallel_run(cfg, parallel_td, parallel_sd))
 
@@ -53,6 +53,4 @@ def parallel_check():
 
 
 if __name__ == "__main__":
-    parallel_check()
-    input("Enter to proceed")
-    comp_serial_parallel()
+    print("Please launch main.py, instead, with the following command: main.py -m diag")
