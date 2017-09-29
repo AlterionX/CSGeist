@@ -79,7 +79,7 @@ class TestData:
 
 
 class StateData:
-    def __init__(self):
+    def __init__(self, quant=0, progress=0):
         self.quant = 0
 
         self.progress = 0

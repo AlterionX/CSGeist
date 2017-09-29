@@ -14,6 +14,7 @@ def fetch_direc_list(cfg: config.Config, direc: str, all=False):
     else:
         direcs = sftp.listdir_attr()
     sftp.close()
+    ssh.close()
     return direcs
 
 
@@ -37,17 +38,20 @@ def single_run(filename: str, cfg: config.Config, td: testdata.TestData = None, 
     if multi:
         cmd_str += ";mv ./{}.* ../".format(name)
 
+    cmd_str += ";exit"
+
     print("Running", filename)
     indata, outdata, errdata, ssh = genssh.run(
         cmd_str,
         cfg,
         otherhost
     )
-    data = [x.decode("utf-8") for x in outdata.read().splitlines()]
+    data = list(outdata.read().splitlines())
+    ssh.close()
+    data = [x.decode("utf-8") for x in data]
     if td is None:
         return data
     td.update(name, data)
-    ssh.close()
     print("Finished", filename)
 
 
@@ -85,11 +89,11 @@ def direc_setup(cfg: config.Config, multi=None):
             cfg.curr_proj_num
         )
 
-    _, output, _, ssh = genssh.run(cmd=prep_cmd, cfg=cfg)
+    _, _, _, ssh = genssh.run(cmd=prep_cmd, cfg=cfg)
     ssh.close()
 
     _, output, _, ssh = genssh.run("readlink -f {}".format(remote_test_dir), cfg)
-    remote_test_dir = output.read().strip().decode()
+    remote_test_dir = str(output.read().strip().decode())
     ssh.close()
 
     return remote_test_dir

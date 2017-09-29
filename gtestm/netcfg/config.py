@@ -16,7 +16,7 @@ def ainp(store, key, out, secure=True):
 
 class Config:
     # Where everything IS
-    DEF_CFG_FILE = "../config"
+    DEF_CFG_FILE = "./config"
     SIMULT = 10
 
     # region Data key strings
@@ -113,7 +113,7 @@ class Config:
         self._init(**self.store)
 
     def check_req(self):
-        for key, prompt in Config.REQ_ELEM:
+        for key, prompt, _ in Config.REQ_ELEM:
             if key not in self.store or self.store[key] is None or not self.store[key]:
                 return True
         return False

@@ -72,9 +72,10 @@ class LoginFrame(ttk.Frame):
 
     def update(self, event=None):
         if len(self.utid_var.get()) > 0 and len(self.psswd_var.get()) > 0:
+            self.master.destroy()
             self.service.set_profile(self.utid_var.get(), self.psswd_var.get())
             self.master.master.event_generate("<<Refresh>>")
-            self.master.destroy()
+            print("Here we are")
 
 
 class ScrollCanvas(ttk.Frame):

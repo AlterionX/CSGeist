@@ -4,14 +4,12 @@ from argparse import Namespace
 from gtestm.netcfg import config
 from gtestm.run.parallel import parallel_run
 from gtestm.utils import testdata
+from run import general
 
 
 def main(args: Namespace, cfg: config.Config):
-    flags = {}
-
-    td = testdata.TestData()
     sd = testdata.StateData()
-    td = parallel_run(cfg, td, sd, multi=args.multi)
+    td = parallel_run(cfg, testdata.TestData(), sd, multi=args.multi)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,8 @@ import threading
 
 from gtestm.run import general as gen
 from gtestm.utils import utlab
+from netcfg import config
+from utils import testdata
 
 runlock = threading.Lock()
 
@@ -25,30 +27,35 @@ class TestJob:
 
 class TestThread(threading.Thread):
     def __init__(self, num, machine, resultqueue, jq):
-        super().__init__()
+        super().__init__(name="Testing{}".format(num))
         self.jq = jq
         self.num = num
         self.machine = machine
         self.resultqueue = resultqueue
+        self.daemon = True
 
     def run(self):
         while True:
-            try:
-                job = self.jq.get(timeout=1)
-            except queue.Empty:
-                break
+            job = self.jq.get()
             if job is None:
+                self.jq.task_done()
                 break
             job.run(num=self.num, machine=self.machine, rq=self.resultqueue)
             self.jq.task_done()
 
 
-def parallel_run(cfg, td, sd, multi=10):
+def parallel_run(cfg: config.Config, td: testdata.TestData, sd: testdata.StateData, multi=10, remote_test_dir=None, jobset: set = None, prog_report: callable = None):
     runlock.acquire()
-    remote_test_dir = gen.direc_setup(cfg, multi=multi)
 
-    tests = gen.fetch_test_list(cfg, remote_test_dir)
+    if remote_test_dir is None:
+        remote_test_dir = gen.direc_setup(cfg, multi=multi)
+
+    if jobset is None:
+        jobset = gen.fetch_test_list(cfg, remote_test_dir)
+
+    tests = jobset
     sd.set_q(len(tests))
+    sd.reset_p()
 
     rq = queue.Queue()
     jq = queue.Queue()
@@ -58,11 +65,15 @@ def parallel_run(cfg, td, sd, multi=10):
 
     machines = utlab.grab_all()
     for i in range(cfg.SIMULT):
+        jq.put(None)
         TestThread(i, machines[i], rq, jq).start()
 
     while not jq.empty():
         data = rq.get()
         td.update(*data)
+        sd.incre_p()
+        if prog_report is not None:
+            prog_report()
 
     jq.join()
 
@@ -72,6 +83,9 @@ def parallel_run(cfg, td, sd, multi=10):
         except queue.Empty:
             break
         td.update(*data)
+        sd.incre_p()
+        if prog_report is not None:
+            prog_report()
 
     runlock.release()
 

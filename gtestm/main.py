@@ -1,6 +1,6 @@
 import argparse
 
-import diagnostic
+import gtestm.diagnostic
 from gtestm import cli
 from gtestm import gui
 from gtestm.netcfg import config
@@ -11,7 +11,8 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    "-m", "--mode",
+    "-m", "--"
+          "mode",
     default='cli', choices=['cli', 'gui', 'diag'],
     help="Launch the script in gui_utils mode or cli mode."
 )
@@ -27,18 +28,18 @@ parser.add_argument(
     help="Delay data entry until the data is needed."
 )
 parser.add_argument(
-    "-m", "--multi",
+    "-p", "--parallel-count",
     default=10, type=int,
     help="Launch with this number of threads"
 )
 
 args = parser.parse_args()
 
-cfg = config.Config(cfg_file=args.cfg_file, delay_login=args.delay)
+cfg = config.Config(cfg_file=args.cfg_file, delay_login=args.delay or args.mode == 'gui')
 
 if not args.mode or args.mode == 'cli':
     cli.main(args=args, cfg=cfg)
-elif args.mode == 'gui_utils':
+elif args.mode == 'gui':
     gui.main(args=args, cfg=cfg)
 elif args.mode == 'diag':
     diagnostic.parallel_check()
