@@ -3,7 +3,7 @@ import threading as th
 from gtestm.netcfg import config
 from gtestm.utils import testdata
 from gtestm.run import general as gen
-from run import parallel
+from gtestm.run import parallel
 
 
 class TkStateData(testdata.StateData):
@@ -50,7 +50,7 @@ class TestRunner(th.Thread):
         self.report.event_generate("<<StartRun>>")
         parallel.parallel_run(
             self.cfg, self.td, self.sd,
-            multi=10, prog_report=lambda: self.report.event_generate("<<Updated>>"),
+            prog_report=lambda: self.report.event_generate("<<Updated>>"),
             remote_test_dir=direc, jobset=hashset
         )
         self.report.event_generate("<<EndUpdate>>")
@@ -70,19 +70,13 @@ class Backend:
         if self.cfg.check_req():
             trigger.event_generate("<<ReqData>>")
             return False
-        print("Acquiring lock")
         if self.run_lock.acquire(blocking=False):
-            print("Lock acquired")
             self.testdata = testdata.TestData()
-            print("Creating thread")
             self.run_thread = TestRunner(self.cfg, self.testdata, self.statedata, trigger)
-            print("Starting thread")
             self.run_thread.start()
-            print("Releasing lock")
             self.run_lock.release()
             return True
         else:
-            print("Lock acquisition failed")
             return False
 
     def get_tests(self):

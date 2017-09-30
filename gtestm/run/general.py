@@ -1,8 +1,9 @@
 import stat
+import time
 
-from netcfg import config
-from utils import testdata
-from netcfg import simplessh as genssh
+from gtestm.netcfg import config
+from gtestm.utils import testdata
+from gtestm.netcfg import simplessh as genssh
 
 
 def fetch_direc_list(cfg: config.Config, direc: str, all=False):
@@ -30,29 +31,32 @@ def single_run(filename: str, cfg: config.Config, td: testdata.TestData = None, 
         otherhost = cfg.remote_host
     name = filename if '.' not in filename else filename[:filename.index('.')]
     cmd_str = "cd {}".format(cfg.outp_dir)
-    if multi:
-        cmd_str += "/CSGeist_m{};mv ../{}.* ./".format(multi, name)
+    if multi is not None:
+        cmd_str += "/CSGeist_m{};mv ../{}.{{cc,ok}} ./".format(multi, name)
 
-    cmd_str += ";make -s {}.result".format(name)
+    cmd_str += ";make clean;make -s {}.result".format(name)
 
-    if multi:
+    if multi is not None:
         cmd_str += ";mv ./{}.* ../".format(name)
 
     cmd_str += ";exit"
 
-    print("Running", filename)
-    indata, outdata, errdata, ssh = genssh.run(
+    print("Running test", filename)
+    _, outdata, _, ssh = genssh.run(
         cmd_str,
         cfg,
         otherhost
     )
-    data = list(outdata.read().splitlines())
+    data = list(outdata.readlines())
+    data = [x.strip() for x in data]
+    status = outdata.channel.recv_exit_status()
     ssh.close()
-    data = [x.decode("utf-8") for x in data]
+    print("Finished", filename)
+
     if td is None:
         return data
+
     td.update(name, data)
-    print("Finished", filename)
 
 
 def direc_setup(cfg: config.Config, multi=None):
@@ -62,7 +66,8 @@ def direc_setup(cfg: config.Config, multi=None):
         cfg.curr_proj_sem,
         cfg.curr_proj_num
     )
-    prep_cmd = "mkdir {};cd {};cp -r {}/* ./".format(
+    prep_cmd = "cd ~/;rm -rf {};mkdir {};cd {};cp -r {}/* ./".format(
+        cfg.outp_dir,
         cfg.outp_dir,
         cfg.outp_dir,
         remote_test_dir,
@@ -89,11 +94,12 @@ def direc_setup(cfg: config.Config, multi=None):
             cfg.curr_proj_num
         )
 
-    _, _, _, ssh = genssh.run(cmd=prep_cmd, cfg=cfg)
+    _, outdata, _, ssh = genssh.run("readlink -f {}".format(remote_test_dir), cfg)
+    remote_test_dir = str(outdata.read().strip().decode())
     ssh.close()
-
-    _, output, _, ssh = genssh.run("readlink -f {}".format(remote_test_dir), cfg)
-    remote_test_dir = str(output.read().strip().decode())
+    
+    _, outdata, _, ssh = genssh.run(cmd=prep_cmd, cfg=cfg)
+    status = outdata.channel.recv_exit_status()
     ssh.close()
 
     return remote_test_dir

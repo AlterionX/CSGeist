@@ -3,8 +3,8 @@ import threading
 
 from gtestm.run import general as gen
 from gtestm.utils import utlab
-from netcfg import config
-from utils import testdata
+from gtestm.netcfg import config
+from gtestm.utils import testdata
 
 runlock = threading.Lock()
 
@@ -15,13 +15,13 @@ class TestJob:
         self.cfg = cfg
 
     def run(self, num, machine, rq):
+        data = gen.single_run(
+            self.name, self.cfg, multi=num, otherhost="{}.cs.utexas.edu".format(machine.host)
+        )
         data = (
             self.name,
-            gen.single_run(
-                self.name, self.cfg, multi=num, otherhost="{}.cs.utexas.edu".format(machine.host)
-            )
+            data
         )
-        print(self.name, data)
         rq.put(data)
 
 
@@ -64,7 +64,7 @@ def parallel_run(cfg: config.Config, td: testdata.TestData, sd: testdata.StateDa
         jq.put(TestJob(test, cfg))
 
     machines = utlab.grab_all()
-    for i in range(cfg.SIMULT):
+    for i in range(multi):
         jq.put(None)
         TestThread(i, machines[i], rq, jq).start()
 

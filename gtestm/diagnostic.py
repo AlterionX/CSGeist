@@ -5,6 +5,7 @@ from gtestm import cli
 from gtestm.netcfg import config
 from gtestm.run import linear
 from gtestm.run import general
+from gtestm.run import parallel
 from gtestm.utils import testdata
 
 
@@ -42,14 +43,24 @@ def parallel_check():
 
     parallel_td = testdata.TestData()
     parallel_sd = testdata.StateData()
+    
+    parallel.parallel_run(cfg, parallel_td, parallel_sd)
+    
+    return parallel_td
 
-    tests = general.fetch_test_list(cfg, general.direc_setup(cfg, multi=10))
 
-    print(cli.parallel_run(cfg, parallel_td, parallel_sd))
-
-    for test in tests:
-        if test not in parallel_td.tests:
+def concurrency_check():
+    print("hi")
+    td0 = parallel_check()
+    print("hi2")
+    td1 = parallel_check()
+    print("hi")
+    for test in td0.tests:
+        if td0.tests[test]['status'] != td1.tests[test]['status']:
             print(test)
+            print(td0.tests[test]['status'])
+            print(td1.tests[test]['status'])
+    print("end")
 
 
 if __name__ == "__main__":
