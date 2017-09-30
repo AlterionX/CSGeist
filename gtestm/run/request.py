@@ -29,7 +29,6 @@ class TestRunner(th.Thread):
         """
         Initialize the runnable
         :param cfg: configuration data
-        :param hashlist: List of files to run on
         """
         super().__init__(name="TestRunner")
         self.cfg = cfg
@@ -40,7 +39,7 @@ class TestRunner(th.Thread):
 
     def run(self, hashlist=None):
         self.report.event_generate("<<StartSetUp>>")
-        direc = gen.direc_setup(self.cfg)
+        direc = gen.direc_setup(self.cfg, multi=self.cfg.SIMULT)
         self.report.event_generate("<<StartFetch>>")
         hashset = set(hashlist if hashlist is not None else [
             direc.filename[:direc.filename.index(".")]

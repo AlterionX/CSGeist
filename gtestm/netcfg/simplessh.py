@@ -8,6 +8,7 @@ from gtestm.utils import utlab
 def run(cmd: str, cfg: config.Config, otherhost=None):
     """
     Wrapper for paramiko's ssh exec_command function.
+    :param otherhost:
     :param cmd: Command to run on a remote
     :param cfg: Configuration data
     :return: A 4-tuple of indata, outdata, errdata, ssh_channel
@@ -23,6 +24,7 @@ def run(cmd: str, cfg: config.Config, otherhost=None):
 def auth(cfg: config.Config, otherhost=None):
     """
     Based on a provided configuration, connect using an ssh connection
+    :param otherhost:
     :param cfg: Configuration to use while connecting
     :return: The ssh session that was opened
     """

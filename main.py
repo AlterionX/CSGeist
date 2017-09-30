@@ -46,15 +46,15 @@ cfg = config.Config(cfg_file=args.cfg_file, delay_login=args.delay or args.mode 
 if not args.mode or args.mode == 'cli':
     cli.main(args=args, cfg=cfg)
 elif args.mode == 'lin':
-    cli.linear_(args=args, cfg=cfg)
+    cli.linear_(cfg=cfg)
 elif args.mode == 'gui':
 
-    if platform != 'Windows':
+    if OS != 'Windows':
         if not os.fork():
             try:
                 os.setsid()
             except OSError:
-                #Do nothing
+                # Do nothing
                 pass
             f = open(os.devnull, 'w')
             sys.stdout = f

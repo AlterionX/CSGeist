@@ -33,7 +33,8 @@ class TestData:
                 TestData.FLAG_KEY: fetch_flags(file_hash)
             }
             self.comp_failed += 1
-        elif "recipe for target 'kernel.o' failed" in data[9] or "Makefile:6: recipe for target 'kernel' failed" in data[9]:
+        elif "recipe for target 'kernel.o' failed" in data[9]\
+                or "Makefile:6: recipe for target 'kernel' failed" in data[9]:
             self.tests[file_hash] = {
                 TestData.STATUS_KEY: Status.CERR,
                 TestData.DATA_KEY: data,
@@ -79,9 +80,9 @@ class TestData:
 
 class StateData:
     def __init__(self, quant=0, progress=0):
-        self.quant = 0
+        self.quant = quant
 
-        self.progress = 0
+        self.progress = progress
         self.proglock = threading.Lock()
 
     def set_q(self, q):

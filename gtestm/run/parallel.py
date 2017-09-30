@@ -44,7 +44,13 @@ class TestThread(threading.Thread):
             self.jq.task_done()
 
 
-def parallel_run(cfg: config.Config, td: testdata.TestData, sd: testdata.StateData, multi=10, remote_test_dir=None, jobset: set = None, prog_report: callable = None):
+def parallel_run(
+        cfg: config.Config,
+        td: testdata.TestData, sd: testdata.StateData,
+        remote_test_dir=None,
+        multi=10, jobset: set = None,
+        prog_report: callable = None
+):
     runlock.acquire()
 
     if remote_test_dir is None:

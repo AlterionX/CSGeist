@@ -150,7 +150,7 @@ class ScrollCanvas(ttk.Frame):
     def get_container(self):
         return self.internal_frame
 
-    def _set_boxdimen(self, event):
+    def _set_boxdimen(self, event=None):
         cd = self.canvas.winfo_width(), self.canvas.winfo_height()
         self.internal_frame.configure(
             height=max(cd[1], max(self.internal_frame_max_height, self.internal_frame.winfo_reqheight())),

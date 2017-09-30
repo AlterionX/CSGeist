@@ -25,7 +25,7 @@ def comp_serial_parallel():
     print("Took", time.time() - start, "seconds")
     print("Starting parallel tests")
     start = time.time()
-    print(cli.parallel_run(cfg, parallel_td, parallel_sd))
+    print(parallel.parallel_run(cfg, parallel_td, parallel_sd))
     parallel_rt = time.time() - start
     print("Took", time.time() - start, "seconds")
     print("Serial runs:", serial_rt)
