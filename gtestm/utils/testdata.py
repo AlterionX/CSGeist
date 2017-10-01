@@ -26,21 +26,22 @@ class TestData:
         :return: None
         """
         self.total += 1
-        if len(data) == 0:
+        if len(data) < 10:
             self.tests[file_hash] = {
                 TestData.STATUS_KEY: Status.CERR,
                 TestData.DATA_KEY: data,
                 TestData.FLAG_KEY: fetch_flags(file_hash)
             }
             self.comp_failed += 1
-        elif "recipe for target 'kernel.o' failed" in data[0] or "Makefile:6: recipe for target 'kernel' failed" in data[0]:
+        elif "recipe for target 'kernel.o' failed" in data[9]\
+                or "Makefile:6: recipe for target 'kernel' failed" in data[9]:
             self.tests[file_hash] = {
                 TestData.STATUS_KEY: Status.CERR,
                 TestData.DATA_KEY: data,
                 TestData.FLAG_KEY: fetch_flags(file_hash)
             }
             self.comp_failed += 1
-        elif "... pass ---" == data[0][-len("... pass ---"):len(data[0])]:
+        elif "... pass ---" == data[9][-len("... pass ---"):len(data[9])]:
             self.tests[file_hash] = {
                 TestData.STATUS_KEY: Status.PASS,
                 TestData.DATA_KEY: data,
@@ -54,7 +55,7 @@ class TestData:
                 TestData.FLAG_KEY: fetch_flags(file_hash)
             }
             self.timed_out += 1
-        elif "... fail ---" == data[0][-len("... pass ---"):len(data[0])]:
+        elif "... fail ---" == data[9][-len("... pass ---"):len(data[9])]:
             self.tests[file_hash] = {
                 TestData.STATUS_KEY: Status.FAIL,
                 TestData.DATA_KEY: data,
@@ -66,7 +67,6 @@ class TestData:
             print(file_hash)
             print(data)
             exit(-1)
-        print(file_hash, data)
 
     def __str__(self):
         return "Total: {}, Passed: {}, Failed: {}, Timed Out: {}, Compilation failed: {}".format(
@@ -79,10 +79,10 @@ class TestData:
 
 
 class StateData:
-    def __init__(self):
-        self.quant = 0
+    def __init__(self, quant=0, progress=0):
+        self.quant = quant
 
-        self.progress = 0
+        self.progress = progress
         self.proglock = threading.Lock()
 
     def set_q(self, q):

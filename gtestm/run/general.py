@@ -1,54 +1,68 @@
 import stat
 
 from gtestm.netcfg import config
-from gtestm.utils import testdata
 from gtestm.netcfg import simplessh as genssh
+from gtestm.utils import testdata
 
 
-def fetch_direc_list(cfg: config.Config, direc: str, all=False):
+def fetch_direc_list(cfg: config.Config, direc: str, whole=False):
     ssh = genssh.auth(cfg)
     sftp = ssh.open_sftp()
     sftp.chdir(direc)
-    if not all:
-        direcs = list(filter(lambda direc: not stat.S_ISDIR(direc.st_mode), sftp.listdir_attr()))
+    if not whole:
+        direcs = list(filter(lambda listed_direc: not stat.S_ISDIR(listed_direc.st_mode), sftp.listdir_attr()))
     else:
         direcs = sftp.listdir_attr()
     sftp.close()
+    ssh.close()
     return direcs
 
 
 def fetch_test_list(cfg: config.Config, direc: str):
     return list(set(map(
-        lambda direc: direc.filename[:direc.filename.index('.')],
+        lambda listed_direc: listed_direc.filename[:listed_direc.filename.index('.')],
         fetch_direc_list(cfg, direc, False)
     )))
 
 
-def single_run(filename: str, cfg: config.Config, td: testdata.TestData = None, multi=None, otherhost=None):
+def single_run(
+        filename: str,
+        cfg: config.Config,
+        td: testdata.TestData = None,
+        multi: int = None, otherhost: str = None
+):
     if otherhost is None:
         otherhost = cfg.remote_host
     name = filename if '.' not in filename else filename[:filename.index('.')]
     cmd_str = "cd {}".format(cfg.outp_dir)
-    if multi:
-        cmd_str += "/CSGeist_m{};mv ../{}.* ./".format(multi, name)
+    if multi is not None:
+        cmd_str += "/CSGeist_m{};mv ../{}.{{cc,ok}} ./".format(multi, name)
 
-    cmd_str += ";make -s {}.result".format(name)
+    cmd_str += ";make clean;make -s {}.result".format(name)
 
-    if multi:
+    if multi is not None:
         cmd_str += ";mv ./{}.* ../".format(name)
 
-    print("Running", filename)
-    indata, outdata, errdata, ssh = genssh.run(
+    cmd_str += ";exit"
+
+    print(cmd_str)
+
+    print("Running test", filename)
+    _, outdata, _, ssh = genssh.run(
         cmd_str,
         cfg,
         otherhost
     )
-    data = [x.decode("utf-8") for x in outdata.read().splitlines()]
-    if td is None:
-        return data
-    td.update(name, data)
+    data = list(outdata.readlines())
+    data = [x.strip() for x in data]
+    outdata.channel.recv_exit_status()
     ssh.close()
     print("Finished", filename)
+
+    if td is None:
+        return data
+
+    td.update(name, data)
 
 
 def direc_setup(cfg: config.Config, multi=None):
@@ -58,7 +72,8 @@ def direc_setup(cfg: config.Config, multi=None):
         cfg.curr_proj_sem,
         cfg.curr_proj_num
     )
-    prep_cmd = "mkdir {};cd {};cp -r {}/* ./".format(
+    prep_cmd = "cd ~/;rm -rf {};mkdir {};cd {};cp -r {}/* ./".format(
+        cfg.outp_dir,
         cfg.outp_dir,
         cfg.outp_dir,
         remote_test_dir,
@@ -85,11 +100,12 @@ def direc_setup(cfg: config.Config, multi=None):
             cfg.curr_proj_num
         )
 
-    _, output, _, ssh = genssh.run(cmd=prep_cmd, cfg=cfg)
+    _, outdata, _, ssh = genssh.run("readlink -f {}".format(remote_test_dir), cfg)
+    remote_test_dir = str(outdata.read().strip().decode())
     ssh.close()
-
-    _, output, _, ssh = genssh.run("readlink -f {}".format(remote_test_dir), cfg)
-    remote_test_dir = output.read().strip().decode()
+    
+    _, outdata, _, ssh = genssh.run(cmd=prep_cmd, cfg=cfg)
+    outdata.channel.recv_exit_status()
     ssh.close()
 
     return remote_test_dir

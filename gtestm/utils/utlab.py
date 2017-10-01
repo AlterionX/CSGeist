@@ -44,7 +44,6 @@ def grab_all():
     with urllib.request.urlopen(url) as response:
         html = response.read()
     sitetree = bs4.BeautifulSoup(html, "html.parser")
-    prettytree = sitetree.prettify()
     data = sitetree.table.find_all("tr")[3:]
     comp_status = [
         LabMachine(

@@ -10,8 +10,8 @@ Ensure the python 3 version of paramiko is installed with the command "pip3 inst
 
 Edit "config-sample" to match your own information and rename it as "config".
 
-Run the CLI using "python3 -m gtestm.modes.cli".
-Run the GUI using "python3 -m gtestm.modes.gui_util".
+Run the CLI using "./gtestm/main.py -m cli".
+Run the GUI using "./gtestm/main.py -m gui".
 
 If you have bash, there are three scripts in the root directory.
 
@@ -20,10 +20,9 @@ Complete:
 - GUI/CLI interface for test running
 - Sorting test cases by name and pass/fail state
 - GUI/CLI dynamic login info request
-- CLI parallellized testing
+- GUI/CLI parallellized testing
 
 In progress:
-- GUI parallelized testing
 - Selective testing & test data replacement
 - Flagging tests (invalid)
 - Batch running selected tests
