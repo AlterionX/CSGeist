@@ -2,10 +2,6 @@
 import getpass
 
 
-# ask if not present
-import pathlib
-
-
 def ainp(store, key, out, secure=True):
     if key not in store or store[key] is None or not store[key]:
         if secure:
@@ -130,7 +126,7 @@ class Config:
                     lambda line: line and line[0:2] != "//",
                     map(
                         lambda line: line.strip(),
-                        open(pathlib.Path(cfg_file)).readlines()
+                        open(cfg_file).readlines()
                     )
                 )
             )
