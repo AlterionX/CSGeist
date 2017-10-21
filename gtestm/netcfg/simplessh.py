@@ -16,7 +16,11 @@ def run(cmd: str, cfg: config.Config, otherhost=None):
     if otherhost is None:
         machines = utlab.grab_all()
         otherhost = "{}.cs.utexas.edu".format(machines[0].host)
-    ssh = auth(cfg, otherhost)
+    try:
+        ssh = auth(cfg, otherhost)
+    except TimeoutError:
+        print("Server timed out while processing your request.")
+        raise RuntimeError("Please notify the person who ran the tests.")
     ind, outd, errd = ssh.exec_command(cmd)
     return ind, outd, errd, ssh
 

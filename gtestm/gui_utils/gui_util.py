@@ -2,6 +2,8 @@ import platform
 import tkinter as tk
 from tkinter import ttk
 
+import time
+
 OS = platform.system()
 
 
@@ -75,7 +77,11 @@ class LoginFrame(ttk.Frame):
             self.master.destroy()
             self.service.set_profile(self.utid_var.get(), self.psswd_var.get())
             self.master.master.event_generate("<<Refresh>>")
-            print("Here we are")
+
+
+class SettingsFrame:
+    def __init__(self, master=None):
+        pass
 
 
 class ScrollCanvas(ttk.Frame):
@@ -92,8 +98,6 @@ class ScrollCanvas(ttk.Frame):
             anchor=tk.N + tk.W,
             window=self.internal_frame
         )
-
-        self.wrapped_frame = SortableTable(self.internal_frame, ["test", "state"], [str.__gt__, str.__gt__])
 
         self.vscroll = ttk.Scrollbar(self)
         self.hscroll = ttk.Scrollbar(self)
@@ -145,7 +149,6 @@ class ScrollCanvas(ttk.Frame):
         self.vscroll.pack(fill=tk.Y, side=tk.RIGHT)
         self.hscroll.pack(fill=tk.X, side=tk.BOTTOM)
         self.canvas.pack(expand=True, fill=tk.BOTH, side=tk.LEFT)
-        self.wrapped_frame.pack(expand=True, fill=tk.BOTH)
 
     def get_container(self):
         return self.internal_frame
@@ -179,75 +182,92 @@ class SortableTable(ttk.Frame):
             categories = []
         if compare_fns is None:
             compare_fns = []
-        self.categories = categories
-        self.comp_fns = compare_fns
-        self.data = []
+        self.categories = [""] + categories
+        self.comp_fns = [None] + compare_fns
 
-        self.category_panels = [ttk.Frame(self) for categories in categories]
-        self.category_buttons = [
-            SortButton(self, master=panel, category=str(category))
-            for category, panel
-            in zip(categories, self.category_panels)
+        self.sel_all_state = tk.IntVar(0)
+        self.category_buttons = [ttk.Checkbutton(master=self, command=self.sel_all)] + [
+            SortButton(self, master=self, category=str(category))
+            for category in categories
         ]
-        self.labels = [[] for _ in range(len(categories))]
+
+        self.last_select = None
+        self.table_rows = []
 
         self._config_widgets()
         self._layout_widgets()
 
     def _config_widgets(self):
-        for panel in self.category_panels:
-            panel.configure(borderwidth=2, relief="groove")
+        self.category_buttons[0].configure(variable=self.sel_all_state, onvalue=1, offvalue=0)
 
     def _layout_widgets(self):
-        for panel, button, column in zip(self.category_panels, self.category_buttons, range(len(self.category_panels))):
-            # panel.pack(expand=True, fill=tk.Y, side=tk.LEFT)
-            panel.grid(row=0, column=column, sticky=tk.E + tk.W + tk.N + tk.S)
-            button.pack(side=tk.TOP, fill=tk.X)
+        for button, column in zip(self.category_buttons, range(len(self.categories))):
+            button.grid(row=0, column=column, sticky=tk.E + tk.W + tk.N + tk.S)
 
-    def give_data(self, data_dirt):
-        self.data = None
-        self.data = [(key_v, data_dirt[key_v]["status"]) for key_v in data_dirt]
+    def give_data(self, data_dirt: dict, replace, key_cat):
+        if replace:
+            if len(data_dirt) > len(self.table_rows):
+                for _ in range(len(self.table_rows), len(data_dirt)):
+                    self.table_rows.append(SortItem(self))
+            if len(data_dirt) < len(self.table_rows):
+                for idx in range(len(self.table_rows) - len(data_dirt) + 1):
+                    self.table_rows.pop()
+            for data_set, row in zip(data_dirt.items(), self.table_rows):
+                row.set_data(key_cat, data_set[0], data_set[1])
+        else:
+            for row in self.table_rows:
+                if row.is_sel():
+                    row.set_data(key_cat, row.get_datum(key_cat), data_dirt[row.get_datum(key_cat)])
         self._avail_display()
 
     def _avail_display(self):
-        for cat_labels in self.labels:
-            for label in cat_labels:
-                label.pack_forget()
-            cat_labels.clear()
-        for datum in self.data:
-            for panel, member, cat_labels in zip(self.category_panels, datum, self.labels):
-                label = ttk.Label(panel, text=str(member))
-                label.pack(fill=tk.X)
-                cat_labels.append(label)
-        colors = {
-            "Status.PASS": ["white", "green"],
-            "Status.FAIL": ["white", "red"],
-            "Status.TOUT": ["white", "blue"],
-            "Status.CERR": ["white", "black"]
-        }
-        for label in self.labels[self.categories.index("state")]:
-            label.configure(foreground=colors[label.cget("text")][0], background=colors[label.cget("text")][1])
+        for row, idx in zip(self.table_rows, range(len(self.table_rows))):
+            row.clear()
+            if row.data_present:
+                row.place(row=idx)
+
         # Generate a configure event
-        self.configure(
-            height=self.category_panels[0].winfo_height()
-        )
-        self.master.configure(
-            height=self.category_panels[0].winfo_height()
-        )
-        self.master.event_generate("<Configure>")
+        self.update()  # update table
+        self.master.update()  # update frame holding table
+        self.master.master.update()  # update canvas holding table
+        self.master.master.master.event_generate("<<Configure>>")  # update frame containing scroll logic
 
     def unsort(self):
-        for button in self.category_buttons:
+        for button in self.category_buttons[1:]:
             button.unset_dir()
 
     def sort(self, direction, category):
-        if self.data:
-            self.data = sorted(
-                self.data,
-                key=lambda data: data[self.categories.index(category)],
+        if self.table_rows:
+            rem = list(filter(lambda row: not row.data_present, self.table_rows))
+            self.table_rows = sorted(
+                filter(lambda row: row.data_present, self.table_rows),
+                key=lambda row: row.get_datum(category),
                 reverse=(direction == 1)
             )
+            self.table_rows.extend(rem)
         self._avail_display()
+
+    def fetch_selected(self, category):
+        data = []
+        for row in self.table_rows:
+            if row.is_sel() == 1:
+                data.append(row.get_datum(category))
+        return data
+
+    def group_select(self, end):
+        if self.last_select is not None:
+            for idx in range(self.last_select + 1, end):
+                self.table_rows[idx].check_state.set((self.table_rows[idx].check_state.get() + 1) % 2)
+        self.last_select = end
+
+    def lock_selection(self, lock=False):
+        self.category_buttons[0].config(state=tk.DISABLED if lock else tk.NORMAL)
+        for row in self.table_rows:
+            row.check.config(state=tk.DISABLED if lock else tk.NORMAL)
+
+    def sel_all(self):
+        for row in self.table_rows:
+            row.check_state.set(self.sel_all_state.get())
 
 
 class SortButton(ttk.Button):
@@ -275,5 +295,65 @@ class SortButton(ttk.Button):
         self.table.sort(direction=self.sort_dir, category=self.category)
 
 
-if __name__ == "__main__":
-    print("This platform is being transitioned. Please use gtestm.modes.gui_util instead.")
+class SortItem:
+    COLORS = {
+        "Status.PASS": ["white", "green"],
+        "Status.FAIL": ["white", "red"],
+        "Status.TOUT": ["white", "blue"],
+        "Status.CERR": ["white", "black"]
+    }
+
+    def __init__(self, table, categories=None):
+        self.table = table
+        self.check_state = tk.IntVar()
+        self.check = ttk.Checkbutton(master=table)
+        self.check.bind("<Button-1>", self._set_select)
+        self.check.bind("<Shift-Button-1>", self._group_select)
+        self.check.configure(variable=self.check_state, onvalue=1, offvalue=0)
+
+        self.composition = [self.check] + [ttk.Label(master=table) for _ in self.table.categories[1:]]
+
+        self.data_present = False
+        self.index = 0
+
+    def _set_select(self, event=None):
+        print("Selecting item #", self.index)
+        self.table.last_select = self.index
+
+    def _group_select(self, event=None):
+        print("Grooup selecting item #", self.index)
+        self.table.group_select(self.index)
+
+    def place(self, row):
+        self.index = row
+        for i in range(len(self.composition)):
+            self.composition[i].grid(row=row + 1, column=i, sticky=tk.E + tk.W + tk.N + tk.S)
+
+    def set_data(self, key_cat, key, data):
+        self.data_present = True
+        for cat, d_label in zip(self.table.categories[1:], self.composition[1:]):
+            if cat == key_cat:
+                d_label.configure(text=key)
+            else:
+                d_label.configure(text=data[cat])
+        if "status" in self.table.categories:
+            self.composition[self.table.categories.index("status")].configure(
+                foreground=SortItem.COLORS[str(data["status"])][0],
+                background=SortItem.COLORS[str(data["status"])][1]
+            )
+
+    def unset_data(self):
+        self.data_present = False
+
+    def get_datum(self, category):
+        return self.composition[self.table.categories.index(category)].cget('text')
+
+    def clear(self):
+        for widget in self.composition:
+            widget.grid_forget()
+
+    def is_sel(self):
+        return self.check_state.get()
+
+    def fetch_attr(self, ind):
+        return self.composition[ind]

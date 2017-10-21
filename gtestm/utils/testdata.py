@@ -33,7 +33,7 @@ class TestData:
                 TestData.FLAG_KEY: fetch_flags(file_hash)
             }
             self.comp_failed += 1
-        elif "recipe for target 'kernel.o' failed" in data[9]\
+        elif "recipe for target " in data[9] and " failed" in data[9]\
                 or "Makefile:6: recipe for target 'kernel' failed" in data[9]:
             self.tests[file_hash] = {
                 TestData.STATUS_KEY: Status.CERR,
