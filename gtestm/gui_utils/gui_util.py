@@ -185,48 +185,46 @@ class SortableTable(ttk.Frame):
         self.categories = [""] + categories
         self.comp_fns = [None] + compare_fns
 
-        self.check_label = ttk.Label(self)
-        self.category_buttons = [ttk.Label(master=self, text="  ")] + [
+        self.sel_all_state = tk.IntVar(0)
+        self.category_buttons = [ttk.Checkbutton(master=self, command=self.sel_all)] + [
             SortButton(self, master=self, category=str(category))
             for category in categories
         ]
 
         self.last_select = None
-
-        self.dataitempairs = []
+        self.table_rows = []
 
         self._config_widgets()
         self._layout_widgets()
 
     def _config_widgets(self):
-        pass  # Nothing to configure...
+        self.category_buttons[0].configure(variable=self.sel_all_state, onvalue=1, offvalue=0)
 
     def _layout_widgets(self):
         for button, column in zip(self.category_buttons, range(len(self.categories))):
-            if button is not None:
-                button.grid(row=0, column=column, sticky=tk.E + tk.W + tk.N + tk.S)
+            button.grid(row=0, column=column, sticky=tk.E + tk.W + tk.N + tk.S)
 
-    def give_data(self, data_dirt):
-        if len(data_dirt) > len(self.dataitempairs):
-            for _ in range(len(data_dirt) - len(self.dataitempairs)):
-                self.dataitempairs.append([None, SortItem(self, categories=self.categories), None])
+    def give_data(self, data_dirt: dict, replace, key_cat):
+        if replace:
+            if len(data_dirt) > len(self.table_rows):
+                for _ in range(len(self.table_rows), len(data_dirt)):
+                    self.table_rows.append(SortItem(self))
+            if len(data_dirt) < len(self.table_rows):
+                for idx in range(len(self.table_rows) - len(data_dirt) + 1):
+                    self.table_rows.pop()
+            for data_set, row in zip(data_dirt.items(), self.table_rows):
+                row.set_data(key_cat, data_set[0], data_set[1])
         else:
-            for idx in range(len(self.dataitempairs) - len(data_dirt) + 1):
-                self.dataitempairs[-idx][0] = None
-                self.dataitempairs[-idx][1].check_state.set(0)
-                self.dataitempairs[-idx][2] = None
-        for key_v, idx in zip(data_dirt, range(len(data_dirt))):
-            self.dataitempairs[idx][0] = (key_v, data_dirt[key_v]["status"])
-            self.dataitempairs[idx][2] = data_dirt[key_v]
-            self.dataitempairs[idx][1].set_data(self.dataitempairs[idx][0])
+            for row in self.table_rows:
+                if row.is_sel():
+                    row.set_data(key_cat, row.get_datum(key_cat), data_dirt[row.get_datum(key_cat)])
         self._avail_display()
 
     def _avail_display(self):
-        for idx in range(len(self.dataitempairs)):
-            datum, sortitem, _ = self.dataitempairs[idx]
-            sortitem.clear()
-            if datum is not None:
-                sortitem.place(row=idx + 1)
+        for row, idx in zip(self.table_rows, range(len(self.table_rows))):
+            row.clear()
+            if row.data_present:
+                row.place(row=idx)
 
         # Generate a configure event
         self.update()  # update table
@@ -239,26 +237,37 @@ class SortableTable(ttk.Frame):
             button.unset_dir()
 
     def sort(self, direction, category):
-        if self.dataitempairs:
-            self.dataitempairs = sorted(
-                filter(lambda data: data[0] is not None, self.dataitempairs),
-                key=lambda data: data[0][self.categories.index(category) - 1],
+        if self.table_rows:
+            rem = list(filter(lambda row: not row.data_present, self.table_rows))
+            self.table_rows = sorted(
+                filter(lambda row: row.data_present, self.table_rows),
+                key=lambda row: row.get_datum(category),
                 reverse=(direction == 1)
             )
+            self.table_rows.extend(rem)
         self._avail_display()
 
     def fetch_selected(self, category):
         data = []
-        for ds in self.dataitempairs:
-            if ds[1].is_sel():
-                data.append(ds[0][self.categories.index(category) - 1])
+        for row in self.table_rows:
+            if row.is_sel() == 1:
+                data.append(row.get_datum(category))
         return data
 
     def group_select(self, end):
         if self.last_select is not None:
-            for idx in range(self.last_select, end - 1):
-                self.dataitempairs[idx][1].check_state.set((self.dataitempairs[idx][1].check_state.get() + 1) % 2)
+            for idx in range(self.last_select + 1, end):
+                self.table_rows[idx].check_state.set((self.table_rows[idx].check_state.get() + 1) % 2)
         self.last_select = end
+
+    def lock_selection(self, lock=False):
+        self.category_buttons[0].config(state=tk.DISABLED if lock else tk.NORMAL)
+        for row in self.table_rows:
+            row.check.config(state=tk.DISABLED if lock else tk.NORMAL)
+
+    def sel_all(self):
+        for row in self.table_rows:
+            row.check_state.set(self.sel_all_state.get())
 
 
 class SortButton(ttk.Button):
@@ -293,7 +302,6 @@ class SortItem:
         "Status.TOUT": ["white", "blue"],
         "Status.CERR": ["white", "black"]
     }
-    _last_press = 0
 
     def __init__(self, table, categories=None):
         self.table = table
@@ -303,9 +311,9 @@ class SortItem:
         self.check.bind("<Shift-Button-1>", self._group_select)
         self.check.configure(variable=self.check_state, onvalue=1, offvalue=0)
 
-        self.categories = categories
-        self.composition = [self.check] + [ttk.Label(master=table) for _ in self.categories[1:]]
+        self.composition = [self.check] + [ttk.Label(master=table) for _ in self.table.categories[1:]]
 
+        self.data_present = False
         self.index = 0
 
     def _set_select(self, event=None):
@@ -319,16 +327,26 @@ class SortItem:
     def place(self, row):
         self.index = row
         for i in range(len(self.composition)):
-            self.composition[i].grid(row=row, column=i, sticky=tk.E + tk.W + tk.N + tk.S)
+            self.composition[i].grid(row=row + 1, column=i, sticky=tk.E + tk.W + tk.N + tk.S)
 
-    def set_data(self, data):
-        for datum, d_label in zip(data, self.composition[1:]):
-            d_label.configure(text=datum)
-        if "state" in self.categories:
-            self.composition[self.categories.index("state")].configure(
-                foreground=SortItem.COLORS[str(data[self.categories.index("state") - 1])][0],
-                background=SortItem.COLORS[str(data[self.categories.index("state") - 1])][1]
+    def set_data(self, key_cat, key, data):
+        self.data_present = True
+        for cat, d_label in zip(self.table.categories[1:], self.composition[1:]):
+            if cat == key_cat:
+                d_label.configure(text=key)
+            else:
+                d_label.configure(text=data[cat])
+        if "status" in self.table.categories:
+            self.composition[self.table.categories.index("status")].configure(
+                foreground=SortItem.COLORS[str(data["status"])][0],
+                background=SortItem.COLORS[str(data["status"])][1]
             )
+
+    def unset_data(self):
+        self.data_present = False
+
+    def get_datum(self, category):
+        return self.composition[self.table.categories.index(category)].cget('text')
 
     def clear(self):
         for widget in self.composition:

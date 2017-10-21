@@ -31,7 +31,7 @@ class CoreFrame(ttk.Frame):
         self.configoptions = tk.Menu(self.menubar, tearoff=0)
 
         self.test_display = gu.ScrollCanvas(self)
-        self.test_table = gu.SortableTable(self.test_display.internal_frame, ["test", "state"], [str.__gt__, str.__gt__])
+        self.test_table = gu.SortableTable(self.test_display.internal_frame, ["test", "status"], [str.__gt__, str.__gt__])
         self.dia = None
 
         self.state_label = ttk.Label(self, text="Hello")
@@ -121,6 +121,7 @@ class CoreFrame(ttk.Frame):
         self.refresh_button.grid_forget()
         self.state_bar.configure(maximum=1)
         self.update()
+        self.test_table.lock_selection(True)
         sel = self.test_table.fetch_selected("test")
         if sel:
             self.service.do_refresh(self, hashlist=sel)
@@ -137,14 +138,17 @@ class CoreFrame(ttk.Frame):
         self.refresh_button.grid(row=0, column=1, sticky=tk.E + tk.W)
         self.state_bar.grid_forget()
         t = self.service.get_tests()
-        self.test_table.give_data(t)
+        self.test_table.give_data(t, False if self.test_table.fetch_selected("test") else True, "test")
+        self.test_table.lock_selection(False)
         self.data_label.configure(text=str(self.service.testdata))
 
     def fail_refresh(self, event=None):
+        self.test_table.lock_selection(False)
         self.refresh_button.grid(row=0, column=1, sticky=tk.E + tk.W)
         self.data_label.configure(text="Failed.")
 
     def spec_reset(self, event=None):
+        self.test_table.lock_selection(False)
         self.finish_refresh()
         self.data_label.configure(text="Failed to locate directory or wrong test directory was provided")
 

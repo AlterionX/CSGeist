@@ -21,11 +21,13 @@ Complete:
 - GUI/CLI parallellized testing
 - Setup script
 - Selective testing & batch running selected tests
+- Test data replacement
 - Run only latest tests
+- Select all button
 
 In progress:
 - Settings dialog
-- Test data replacement
+- Improve select all button
 - Flagging tests (invalid)
 - Test result caching
 - Better GUI
