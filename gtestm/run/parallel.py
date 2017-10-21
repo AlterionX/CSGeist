@@ -40,7 +40,11 @@ class TestThread(threading.Thread):
             if job is None:
                 self.jq.task_done()
                 break
-            job.run(num=self.num, machine=self.machine, rq=self.resultqueue)
+            try:
+                job.run(num=self.num, machine=self.machine, rq=self.resultqueue)
+            except RuntimeError:
+                print("Terminating thread")
+                return
             self.jq.task_done()
 
 
@@ -69,10 +73,16 @@ def parallel_run(
     for test in tests:
         jq.put(TestJob(test, cfg))
 
+    print("Grabbing machines")
+
     machines = utlab.grab_all()
+    threads = []
     for i in range(multi):
         jq.put(None)
-        TestThread(i, machines[i], rq, jq).start()
+        threads.append(TestThread(i, machines[i], rq, jq))
+        threads[-1].start()
+
+    print("Started everything")
 
     while not jq.empty():
         data = rq.get()
@@ -83,11 +93,8 @@ def parallel_run(
 
     jq.join()
 
-    while True:
-        try:
-            data = rq.get(timeout=5)
-        except queue.Empty:
-            break
+    while not rq.empty():
+        data = rq.get()
         td.update(*data)
         sd.incre_p()
         if prog_report is not None:

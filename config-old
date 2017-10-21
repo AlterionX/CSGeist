@@ -1,0 +1,40 @@
+//The CS account -- leaving this blank will cause a popup asking for the info
+remote_user:benxu
+remote_pass:B3nj4m1n
+
+//This is the host used to setup the directories
+remote_host:linux.cs.utexas.edu
+
+//Parent directory of where the tests are
+test_dir:~gheith/public
+
+//Parent directory of where your project files are
+proj_dir:~/Documents/cs439h
+
+//Where the program will use for scratch work
+outp_dir:~/Documents/cs439h/gtestm_benxu_cs439h_f17_p4
+
+//Info on the current project
+curr_proj_cls:cs439h
+curr_proj_sem:f17
+curr_proj_num:p4
+
+//These don't matter yet
+local_user:
+local_pass:
+local_host:
+proj_loc:
+outp_loc:
+yr:NotDoneYet
+mn:NotDoneYet
+dy:NotDoneYet
+hr:NotDoneYet
+mi:NotDoneYet
+sc:NotDoneYet
+
+//Just listing all the possibilities
+//pull_types:latest,broken,notbroken,all,brokenchildren
+
+//Dunno whose email this is, but something's wrong with him.
+//email:./email.txt
+

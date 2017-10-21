@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
+import getpass
 import pathlib
 import subprocess
+
+import netcfg.config as cfg
 
 # Install needed packages
 subprocess.run("pip3 install paramiko", shell=True)
@@ -35,3 +38,26 @@ while not file_path:
 
 # Now has a valid end goal
 
+cfg.Config(cfg_file=file_path, delay_login=True)
+
+data = {}
+
+for subject, text, secure in cfg.Config.REQ_ELEM:
+    value = ""
+    if not secure:
+        value = input(
+            "Current data stored for {} is {}.\nThis is{} please enter a value:".format(
+                subject, cfg.Config.ENV_VARS[subject], text
+            )
+        ).strip()
+    else:
+        value = getpass.getpass()
+    if value:
+        data[subject] = value
+    else:
+        data[subject] = cfg.Config.ENV_VARS[subject]
+
+with open("./config", mode="w") as config_file:
+    for subject in data:
+        print("New stuff for {} is {}".format(subject, data[subject]))
+        config_file.write("{}:{}\n".format(subject, "" if data[subject] is None else data[subject]))

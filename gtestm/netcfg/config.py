@@ -98,7 +98,8 @@ class Config:
         (GDC_PASS_KEY, " password", True),
         (TEST_DIR_KEY, " the parent directory of the source of all the tests", False),
         (PROJ_DIR_KEY, " the parent directory of where your projects are located", False),
-        (CURR_PROJ_CLS_KEY, " class(cs???)", False),
+        (OUTP_DIR_KEY, " a directory that can be completely scrapped", False),
+        (CURR_PROJ_CLS_KEY, " class(cs<code>)", False),
         (CURR_PROJ_SEM_KEY, " semester(<semester letter><year>)", False),
         (CURR_PROJ_NUM_KEY, " project number(p<number>)", False)
     ]

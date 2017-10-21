@@ -45,18 +45,19 @@ def single_run(
 
     cmd_str += ";exit"
 
-    print(cmd_str)
-
-    print("Running test", filename)
-    _, outdata, _, ssh = genssh.run(
-        cmd_str,
-        cfg,
-        otherhost
-    )
-    data = list(outdata.readlines())
-    data = [x.strip() for x in data]
-    outdata.channel.recv_exit_status()
-    ssh.close()
+    try:
+        _, outdata, _, ssh = genssh.run(
+            cmd_str,
+            cfg,
+            otherhost
+        )
+        data = list(outdata.readlines())
+        data = [x.strip() for x in data]
+        outdata.channel.recv_exit_status()
+        ssh.close()
+    except RuntimeError:
+        print("Server failed to respond while running a single file.")
+        raise RuntimeError("Fuck.")
     print("Finished", filename)
 
     if td is None:
@@ -66,7 +67,7 @@ def single_run(
 
 
 def direc_setup(cfg: config.Config, multi=None):
-    remote_test_dir = "{}/{}_{}_{}".format(
+    remote_test_dir = "{}/{}_{}_{}/latest".format(
         cfg.test_dir,
         cfg.curr_proj_cls,
         cfg.curr_proj_sem,
@@ -100,13 +101,17 @@ def direc_setup(cfg: config.Config, multi=None):
             cfg.curr_proj_num
         )
 
-    _, outdata, _, ssh = genssh.run("readlink -f {}".format(remote_test_dir), cfg)
-    remote_test_dir = str(outdata.read().strip().decode())
-    ssh.close()
-    
-    _, outdata, _, ssh = genssh.run(cmd=prep_cmd, cfg=cfg)
-    outdata.channel.recv_exit_status()
-    ssh.close()
+    try:
+        _, outdata, _, ssh = genssh.run("readlink -f {}".format(remote_test_dir), cfg)
+        remote_test_dir = str(outdata.read().strip().decode())
+        ssh.close()
+
+        _, outdata, _, ssh = genssh.run(cmd=prep_cmd, cfg=cfg)
+        outdata.channel.recv_exit_status()
+        ssh.close()
+    except RuntimeError:
+        print("Failed to setup directory.")
+        raise RuntimeError("More fucks.")
 
     return remote_test_dir
 
